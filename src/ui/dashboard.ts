@@ -8,6 +8,15 @@ import { fmtMoney, comb, $ } from '../utils';
 import { renderNumberGrid, renderMetrics, renderPickRow, suggestionText } from './renderers';
 import { advancedInsight } from './game';
 import { renderFreqChart, renderPairHeatmap } from './charts';
+import { on } from '../events';
+
+let _subscribed = false;
+
+function subscribe(): void {
+  if (_subscribed) return;
+  _subscribed = true;
+  on('latest-updated', () => renderDashboard());
+}
 
 function fmt(v: number | null | undefined): string {
   if (v == null || v === 0) return '-';
@@ -29,6 +38,7 @@ function getEstimated(d: LatestData | undefined): number {
 }
 
 export function renderDashboard(): void {
+  subscribe();
   const totalHist = GAMES.reduce((s, g) => s + (STATE.history[g.id] || []).length, 0);
   const latest = STATE.latest || {};
   const totalAccumulated = GAMES.reduce((s, g) => {

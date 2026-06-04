@@ -5,6 +5,7 @@ import { analyze } from '../engine/analyze';
 import { buildGame, generateSet } from '../engine/generate';
 import { scoreTicket, aiReport, portfolioReport, ensembleScore } from '../engine/score';
 import { comb, $, fmtMoney, fmtNum, cfg, copyText } from '../utils';
+import { emit } from '../events';
 import { renderDashboard, renderGame } from './dashboard';
 import { renderPicks } from './picks';
 import { renderFavorites, saveWallet, copyFavorite, deleteFavorite, clearFavorites } from './favorites';
@@ -289,7 +290,7 @@ async function tryFetchLatest(): Promise<void> {
     const total = GAMES.reduce((s, g) => s + (STATE.history[g.id] || []).length, 0);
     badge.textContent = total ? `${total} concursos locais` : 'Base local';
   }
-  renderDashboard();
+  emit('latest-updated');
 }
 
 init();

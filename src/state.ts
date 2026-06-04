@@ -1,14 +1,15 @@
-import type { AnalysisResult, LatestData, Ticket, WalletFavorite, MLTree } from './types';
+import type { AnalysisResult, LatestData, Ticket, WalletFavorite, MLTree, DrawRow } from './types';
 import { GAMES } from './config';
 import type { GBTree } from './engine/ml';
 import type { MarkovChain } from './engine/markov';
 import type { ClusterResult } from './engine/cluster';
+import { storageGetSync, storageSet } from './storage';
 
 export interface GlobalState {
   view: string;
   game: string;
   selected: Record<string, number[]>;
-  history: Record<string, import('./types').DrawRow[]>;
+  history: Record<string, DrawRow[]>;
   latest: Record<string, LatestData>;
   generated: Ticket[];
   budget: Ticket[];
@@ -37,60 +38,66 @@ export const STATE: GlobalState = {
   analysisCache: {},
 };
 
+const _histKeys = new Set<string>();
+
 try {
   GAMES.forEach(g => {
     STATE.selected[g.id] = [];
-    STATE.history[g.id] = loadHistory(g.id);
+    const h = loadHistorySync(g.id);
+    STATE.history[g.id] = h;
+    if (h.length) _histKeys.add('hist_' + g.id);
   });
 
-  const c = JSON.parse(localStorage.getItem('analysisCache') || '{}');
+  const c = storageGetSync<Record<string, { sig: string; data: AnalysisResult }>>('analysisCache') || {};
   Object.assign(STATE.analysisCache, c);
 
-  const m = JSON.parse(localStorage.getItem('markovCache') || '{}');
+  const m = storageGetSync<Record<string, MarkovChain | null>>('markovCache') || {};
   STATE.markovCache = m;
 
-  const cl = JSON.parse(localStorage.getItem('clusterCache') || '{}');
+  const cl = storageGetSync<Record<string, ClusterResult | null>>('clusterCache') || {};
   STATE.clusterCache = cl;
 
-  const gb = JSON.parse(localStorage.getItem('gbForests') || '{}');
+  const gb = storageGetSync<Record<string, GBTree[] | null>>('gbForests') || {};
   STATE.gbForests = gb;
 } catch {
-  /* Worker mode: no localStorage, STATE stays with defaults */
   STATE.markovCache = {};
   STATE.clusterCache = {};
   STATE.gbForests = {};
 }
 
 export function saveAnalysisCache(): void {
-  try {
-    const c: Record<string, { sig: string; data: AnalysisResult }> = {};
-    for (const [k, v] of Object.entries(STATE.analysisCache)) {
-      c[k] = { sig: v.sig, data: v.data };
-    }
-    localStorage.setItem('analysisCache', JSON.stringify(c));
-  } catch { /* Worker mode: no localStorage */ }
+  const c: Record<string, { sig: string; data: AnalysisResult }> = {};
+  for (const [k, v] of Object.entries(STATE.analysisCache)) {
+    c[k] = { sig: v.sig, data: v.data };
+  }
+  storageSet('analysisCache', c);
 }
 
 export function saveMarkovCache(): void {
-  try { localStorage.setItem('markovCache', JSON.stringify(STATE.markovCache || {})); } catch { /* worker */ }
+  storageSet('markovCache', STATE.markovCache || {});
 }
 
 export function saveClusterCache(): void {
-  try { localStorage.setItem('clusterCache', JSON.stringify(STATE.clusterCache || {})); } catch { /* worker */ }
+  storageSet('clusterCache', STATE.clusterCache || {});
 }
 
 export function saveGBForests(): void {
-  try { localStorage.setItem('gbForests', JSON.stringify(STATE.gbForests || {})); } catch { /* worker */ }
+  storageSet('gbForests', STATE.gbForests || {});
 }
 
 export function saveHistory(id: string): void {
-  localStorage.setItem('hist_' + id, JSON.stringify(STATE.history[id] || []));
+  const key = 'hist_' + id;
+  _histKeys.add(key);
+  storageSet(key, STATE.history[id] || []);
 }
 
 export function saveFavorites(): void {
-  localStorage.setItem('favorite_wallets', JSON.stringify(STATE.favorites.slice(0, 40)));
+  storageSet('favorite_wallets', STATE.favorites.slice(0, 40));
 }
 
-function loadHistory(id: string): import('./types').DrawRow[] {
-  try { return JSON.parse(localStorage.getItem('hist_' + id) || '[]'); } catch { return []; }
+function loadHistorySync(id: string): DrawRow[] {
+  try {
+    const raw = localStorage.getItem('hist_' + id);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
 }

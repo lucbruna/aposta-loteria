@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "chart.js": "^4.5.1",
-    "chartjs-chart-matrix": "^3.0.4"
+    "chartjs-chart-matrix": "^3.0.4",
+    "idb-keyval": "^6.2.5"
   }
 }

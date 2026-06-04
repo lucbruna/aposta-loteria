@@ -18,12 +18,21 @@ function pad(n: number, g: Game): string {
   return String(n).padStart(g.max > 99 ? 5 : 2, '0');
 }
 
+function getPrize(d: any): number {
+  if (!d) return 0;
+  return d.valorAcumulado || d.acumulado || d.valorPremio || d.premio || 0;
+}
+
+function getEstimated(d: any): number {
+  if (!d) return 0;
+  return d.valorEstimadoProximoConcurso || d.estimativa || d.estimado || d.valorEstimado || 0;
+}
+
 export function renderDashboard(): void {
   const totalHist = GAMES.reduce((s, g) => s + (STATE.history[g.id] || []).length, 0);
   const latest = STATE.latest || {};
   const totalAccumulated = GAMES.reduce((s, g) => {
-    const d = latest[g.id];
-    return s + ((d && d.valorAcumulado) || 0);
+    return s + getPrize(latest[g.id]);
   }, 0);
   const onlineCount = Object.keys(latest).filter(k => latest[k]?.concurso).length;
 
@@ -70,6 +79,7 @@ function nextDrawDate(latest: Record<string, any>): string {
   const dates = GAMES.map(g => {
     const d = latest[g.id];
     if (d?.dataProximoConcurso) return { game: g.name, date: d.dataProximoConcurso };
+    if (d?.data) return { game: g.name, date: d.data };
     return null;
   }).filter(Boolean) as Array<{ game: string; date: string }>;
 
@@ -82,8 +92,8 @@ function renderEvolutionCard(g: Game): string {
   const a: AnalysisResult = analyze(g);
   const latest = STATE.latest?.[g.id];
   const hist = (STATE.history[g.id] || []).length;
-  const accumulated = latest?.valorAcumulado || 0;
-  const estimated = latest?.valorEstimadoProximoConcurso || 0;
+  const accumulated = getPrize(latest);
+  const estimated = getEstimated(latest);
   const lastDraw = latest?.concurso ? String(latest.concurso) : (hist ? String(hist) : '—');
   const lastDate = latest?.data || '';
   const lastNums: number[] = (latest?.dezenas || []).map(Number).filter((n: number) => !isNaN(n));
@@ -151,9 +161,9 @@ export function renderGame(g: Game): void {
   const odds = g.odds || comb(g.max - g.min + 1, g.pick);
   const prob = odds ? (1 / odds * 100).toExponential(3) : 'variavel';
   const latest = STATE.latest?.[g.id];
-  const accumulated = latest?.valorAcumulado;
-  const nextDraw = latest?.dataProximoConcurso || '';
-  const estimated = latest?.valorEstimadoProximoConcurso;
+  const accumulated = getPrize(latest);
+  const nextDraw = latest?.dataProximoConcurso || latest?.data || '';
+  const estimated = getEstimated(latest);
 
   $('gameView')!.innerHTML = `
     <div class="toolbar" style="--accent:${g.color}">

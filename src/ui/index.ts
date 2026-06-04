@@ -272,8 +272,9 @@ async function tryFetchLatest(): Promise<void> {
         if (nums.length >= Math.min(g.pick, 6)) {
           STATE.latest[g.id] = data;
           ok++;
-          if (data.valorAcumulado) STATE.latest[g.id].valorAcumulado = data.valorAcumulado;
-          if (data.valorEstimadoProximoConcurso) STATE.latest[g.id].valorEstimadoProximoConcurso = data.valorEstimadoProximoConcurso;
+          STATE.latest[g.id].valorAcumulado = data.valorAcumulado || data.acumulado || data.valorPremio || data.premio || 0;
+          STATE.latest[g.id].valorEstimadoProximoConcurso = data.valorEstimadoProximoConcurso || data.estimativa || data.estimado || data.valorEstimado || 0;
+          STATE.latest[g.id].dataProximoConcurso = data.dataProximoConcurso || data.data || data.proximoConcurso || '';
           break;
         }
       } catch { /* try next API */ }

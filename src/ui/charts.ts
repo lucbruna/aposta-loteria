@@ -1,13 +1,23 @@
 import type { Game, AnalysisResult } from '../types';
 
-let Chart: any = null;
+type ChartInstance = any;
+let _Chart: any = null;
+let _matrix: any = null;
 
-async function getChart(): Promise<any> {
-  if (!Chart) {
-    const mod = await import('chart.js');
-    Chart = mod.Chart;
+async function ensureChart(): Promise<any> {
+  if (!_Chart) {
+    const [
+      { Chart, BarController, LineController, CategoryScale, LinearScale, Tooltip, Legend, Filler },
+      { MatrixController, MatrixElement },
+    ] = await Promise.all([
+      import('chart.js') as Promise<any>,
+      import('chartjs-chart-matrix') as Promise<any>,
+    ]);
+    Chart.register(BarController, LineController, MatrixController, MatrixElement, CategoryScale, LinearScale, Tooltip, Legend, Filler);
+    _Chart = Chart;
+    _matrix = { MatrixController, MatrixElement };
   }
-  return Chart;
+  return _Chart;
 }
 
 export async function renderFreqChart(
@@ -15,11 +25,11 @@ export async function renderFreqChart(
   g: Game,
   a: AnalysisResult
 ): Promise<void> {
-  const Chart = await getChart();
+  const ChartMod = await ensureChart();
   const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
   if (!canvas) return;
 
-  const existing = Chart.getChart(canvas);
+  const existing = ChartMod.getChart(canvas);
   if (existing) existing.destroy();
 
   const nums = a.score.map(s => s.n);
@@ -27,7 +37,7 @@ export async function renderFreqChart(
   const scores = a.score.map(s => s.score);
   const color = g.color;
 
-  new Chart(canvas, {
+  new ChartMod(canvas, {
     type: 'bar',
     data: {
       labels: nums.map(n => String(n).padStart(g.max > 99 ? 3 : 2, '0')),
@@ -90,11 +100,11 @@ export async function renderPairHeatmap(
   g: Game,
   a: AnalysisResult
 ): Promise<void> {
-  const Chart = await getChart();
+  const ChartMod = await ensureChart();
   const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
   if (!canvas) return;
 
-  const existing = Chart.getChart(canvas);
+  const existing = ChartMod.getChart(canvas);
   if (existing) existing.destroy();
 
   const topN = Math.min(15, g.max - g.min + 1);
@@ -121,10 +131,11 @@ export async function renderPairHeatmap(
   const allVals = data.flat();
   const maxVal = Math.max(...allVals, 1);
 
-  new Chart(canvas, {
+  new ChartMod(canvas, {
     type: 'matrix',
     data: {
       datasets: [{
+        label: 'Pares',
         data: data.flatMap((row, i) =>
           row.map((v, j) => ({ x: j, y: i, v }))
         ),
@@ -158,13 +169,13 @@ export async function renderPairHeatmap(
       },
       scales: {
         x: {
-          type: 'category',
+          type: 'category' as const,
           labels,
           ticks: { color: '#94a3b8', font: { size: 9 } },
           grid: { display: false },
         },
         y: {
-          type: 'category',
+          type: 'category' as const,
           labels,
           ticks: { color: '#94a3b8', font: { size: 9 } },
           grid: { display: false },
@@ -181,18 +192,18 @@ export async function renderBacktestChart(
   statsRandom: Record<number, number>,
   g: Game
 ): Promise<void> {
-  const Chart = await getChart();
+  const ChartMod = await ensureChart();
   const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
   if (!canvas) return;
 
-  const existing = Chart.getChart(canvas);
+  const existing = ChartMod.getChart(canvas);
   if (existing) existing.destroy();
 
   const keys = Array.from({ length: g.pick + 1 }, (_, i) => i).reverse();
   const aiData = keys.map(k => statsAi[k] || 0);
   const rndData = keys.map(k => statsRandom[k] || 0);
 
-  new Chart(canvas, {
+  new ChartMod(canvas, {
     type: 'bar',
     data: {
       labels: keys.map(k => `${k} acertos`),

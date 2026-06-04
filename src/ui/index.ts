@@ -55,8 +55,14 @@ function showView(v: string): void {
   STATE.view = v;
   document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
   $(`view-${v}`).classList.add('active');
-  document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active'));
-  document.querySelectorAll(`[data-view="${v}"]`).forEach(x => x.classList.add('active'));
+  document.querySelectorAll('.nav-btn').forEach(x => {
+    x.classList.remove('active');
+    x.removeAttribute('aria-current');
+  });
+  document.querySelectorAll(`[data-view="${v}"]`).forEach(x => {
+    x.classList.add('active');
+    x.setAttribute('aria-current', 'page');
+  });
 
   const map: Record<string, [string, string]> = {
     dashboard: ['Dashboard', 'Analise matematica das principais loterias brasileiras'],
@@ -80,6 +86,7 @@ function showView(v: string): void {
   if (v === 'wheel') renderWheel();
   if (v === 'import') renderImportStatus();
   closeSide();
+  setTimeout(() => $(`view-${v}`)?.querySelector<HTMLElement>('button, select, input, [tabindex]:not([tabindex="-1"])')?.focus(), 100);
 }
 
 function showGame(id: string): void {
@@ -87,13 +94,20 @@ function showGame(id: string): void {
   STATE.game = id;
   document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
   $('view-game').classList.add('active');
-  document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active'));
-  document.querySelectorAll(`[data-game="${id}"]`).forEach(x => x.classList.add('active'));
+  document.querySelectorAll('.nav-btn').forEach(x => {
+    x.classList.remove('active');
+    x.removeAttribute('aria-current');
+  });
+  document.querySelectorAll(`[data-game="${id}"]`).forEach(x => {
+    x.classList.add('active');
+    x.setAttribute('aria-current', 'page');
+  });
   const g = GAMES.find(x => x.id === id)!;
   $('pageTitle').textContent = g.name;
   $('pageSub').textContent = `${g.draw} | aposta base ${fmtMoney(g.price)}`;
   renderGame(g);
   closeSide();
+  setTimeout(() => $('view-game')?.querySelector<HTMLElement>('button, select, input, [tabindex]:not([tabindex="-1"])')?.focus(), 100);
 }
 
 function toggleNum(id: string, n: number): void {
@@ -190,6 +204,17 @@ function showLogs(): void {
     </div>`;
 }
 
+document.addEventListener('keydown', (e: KeyboardEvent) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    const t = e.target as HTMLElement;
+    if (t.getAttribute('onclick') && t.tagName !== 'INPUT' && t.tagName !== 'SELECT') {
+      e.preventDefault();
+      t.click();
+    }
+  }
+  if (e.key === 'Escape') closeSide();
+});
+
 export function init(): void {
   renderNav();
   fillSelects();
@@ -210,7 +235,7 @@ export function init(): void {
 
 function renderNav(): void {
   $('gameNav')!.innerHTML = GAMES.map(g =>
-    `<button class="nav-btn" data-game="${g.id}" onclick="showGame('${g.id}')"><span class="nav-dot" style="background:${g.color}"></span>${g.name}</button>`
+    `<button class="nav-btn" data-game="${g.id}" onclick="showGame('${g.id}')" aria-label="${g.name}"><span class="nav-dot" style="background:${g.color}" aria-hidden="true"></span>${g.name}</button>`
   ).join('');
 }
 

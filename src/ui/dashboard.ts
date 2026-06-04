@@ -153,7 +153,7 @@ function renderEvolutionCard(g: Game): string {
     `<div class="freq-row"><span class="freq-num">${String(x.n).padStart(2, '0')}</span><div class="freq-bar-wrap"><div class="freq-bar" style="width:${(x.score / maxFreq) * 100}%"></div></div><span class="freq-val">${x.score.toFixed(1)}</span></div>`
   ).join('');
 
-  return `<div class="evolution-card" style="--accent:${g.color}" onclick="showGame('${g.id}')">
+  return `<div class="evolution-card" style="--accent:${g.color}" onclick="showGame('${g.id}')" role="button" tabindex="0" aria-label="${g.name}: ${online ? fmt(accumulated) : hist + ' concursos'}">
     <div class="evol-head">
       <span class="evol-name">${g.name}</span>
       <span class="evol-prize">${online ? fmt(accumulated) : (hist ? hist + ' conc' : '—')}</span>
@@ -171,8 +171,8 @@ function renderEvolutionCard(g: Game): string {
       <span>${hist} registros</span>
     </div>
     ${nextDate ? `<div class="evol-next-date">Proximo: ${nextDate}</div>` : ''}
-    ${lastNums.length ? `<div class="evol-balls-row">${lastNums.slice(0, 6).map(n => `<span class="ball small pick evol-ball" style="--accent:${g.color}">${pad(n, g)}</span>`).join('')}</div>` : ''}
-    ${hist ? `<div class="evol-dots">${drawDots}${emptyHTML}</div>` : ''}
+    ${lastNums.length ? `<div class="evol-balls-row" aria-hidden="true">${lastNums.slice(0, 6).map(n => `<span class="ball small pick evol-ball" style="--accent:${g.color}">${pad(n, g)}</span>`).join('')}</div>` : ''}
+    ${hist ? `<div class="evol-dots" aria-hidden="true">${drawDots}${emptyHTML}</div>` : ''}
     ${freqBars ? `<div class="evol-top5-section"><div class="evol-top5-header">TOP 5 FREQ</div>${freqBars}</div>` : ''}
   </div>`;
 }
@@ -228,7 +228,7 @@ export function renderGame(g: Game): void {
     <div class="grid two" style="--accent:${g.color}">
       <div class="card"><h3>Volante</h3><div class="balls">${renderNumberGrid(g, a, sel)}</div></div>
       <div class="card"><h3>Aposta</h3>
-        <div class="balls balls-spaced">${sel.length ? sel.map((n: number) => `<span class="ball pick" onclick="toggleNum('${g.id}',${n})" style="--accent:${g.color}">${String(n).padStart(g.max > 99 ? 5 : 2, '0')}</span>`).join('') : '<span class="analysis">Nenhum numero.</span>'}</div>
+        <div class="balls balls-spaced">${sel.length ? sel.map((n: number) => `<span class="ball pick" onclick="toggleNum('${g.id}',${n})" role="button" tabindex="0" aria-label="${n}, remover" style="--accent:${g.color}">${String(n).padStart(g.max > 99 ? 5 : 2, '0')}</span>`).join('') : '<span class="analysis">Nenhum numero.</span>'}</div>
         <div class="analysis">${suggestionText(g, a, sel)}<br><br>${sel.length === g.pick ? advancedInsight(g, sel) : advancedInsight(g, generated[0].main)}</div>
       </div>
     </div>
@@ -244,7 +244,7 @@ export function renderGame(g: Game): void {
     <div class="grid two" style="margin-top:14px;--accent:${g.color}">
       <div class="card"><h3>Forca</h3>${renderMetrics(g, a.score.slice(0, 12), a)}</div>
       <div class="card"><h3>Pares</h3>
-        <div class="canvas-box tall"><canvas id="pairChart-${g.id}"></canvas></div>
+        <div class="canvas-box tall"><canvas id="pairChart-${g.id}" role="img" aria-label="Mapa de calor de pares de números"></canvas></div>
       </div>
     </div>`;
 

@@ -7,12 +7,12 @@ export function renderNumberGrid(g: Game, a: AnalysisResult, sel: number[]): str
   if (g.columns) {
     return Array.from({ length: 7 }, (_, col) =>
       `<div style="width:100%;font-size:12px;color:var(--muted);margin:8px 0 2px">Coluna ${col + 1}</div>` +
-      Array.from({ length: 10 }, (_, n) => `<span class="ball ${sel[col] === n ? 'pick' : ''}" onclick="setColumn('${g.id}',${col},${n})" style="--accent:${g.color}">${n}</span>`).join('')
+      Array.from({ length: 10 }, (_, n) => `<span class="ball ${sel[col] === n ? 'pick' : ''}" onclick="setColumn('${g.id}',${col},${n})" role="button" tabindex="0" aria-label="Coluna ${col + 1}, ${n}" style="--accent:${g.color}">${n}</span>`).join('')
     ).join('');
   }
   const nums = Array.from({ length: g.max - g.min + 1 }, (_, i) => g.min + i);
   return nums.map(n =>
-    `<span class="ball ${sel.includes(n) ? 'pick' : ''} ${a.top.includes(n) ? 'reco' : ''}" onclick="toggleNum('${g.id}',${n})" title="Score ${a.weights.get(n) || 50}" style="--accent:${g.color}">${fmtNum(n, g)}</span>`
+    `<span class="ball ${sel.includes(n) ? 'pick' : ''} ${a.top.includes(n) ? 'reco' : ''}" onclick="toggleNum('${g.id}',${n})" role="button" tabindex="0" aria-label="${fmtNum(n, g)}${sel.includes(n) ? ', selecionado' : ''}" title="Score ${a.weights.get(n) || 50}" style="--accent:${g.color}">${fmtNum(n, g)}</span>`
   ).join('');
 }
 
@@ -25,7 +25,7 @@ export function renderMetrics(g: Game, rows: Array<{ n: number; score: number }>
 
 export function renderPickRow(g: Game, p: any, i: number): string {
   const ai = p.ai || aiReport(g, p.main);
-  return `<div class="pick-row"><div><div class="balls">${p.main.map((n: number) => `<span class="ball small pick" style="--accent:${g.color}">${fmtNum(n, g)}</span>`).join('')}${p.extra?.length ? `<span class="pill">${g.extra?.name}: ${p.extra.join(', ')}</span>` : ''}</div><div class="pick-meta">Jogo ${i + 1} | score ${p.score}/99 | IA ${ai.grade} | perfil ${ai.profile} | pares ${ai.pair} | entropia ${ai.entropy} | ${ai.risk}</div></div><button class="btn" onclick="copyText('${formatTicket(g, p).replace(/'/g, "\\'")}')">Copiar</button></div>`;
+  return `<div class="pick-row"><div><div class="balls">${p.main.map((n: number) => `<span class="ball small pick" role="button" tabindex="0" aria-label="${fmtNum(n, g)}" style="--accent:${g.color}">${fmtNum(n, g)}</span>`).join('')}${p.extra?.length ? `<span class="pill">${g.extra?.name}: ${p.extra.join(', ')}</span>` : ''}</div><div class="pick-meta">Jogo ${i + 1} | score ${p.score}/99 | IA ${ai.grade} | perfil ${ai.profile} | pares ${ai.pair} | entropia ${ai.entropy} | ${ai.risk}</div></div><button class="btn" onclick="copyText('${formatTicket(g, p).replace(/'/g, "\\'")}')" aria-label="Copiar jogo ${i + 1}">Copiar</button></div>`;
 }
 
 export function formatTicket(g: Game, p: any): string {

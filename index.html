@@ -10,132 +10,132 @@
 <meta name="description" content="Motor probabilistico para analise de loterias brasileiras">
 </head>
 <body>
-<div class="app">
-  <aside class="side" id="side">
+  <div class="app" role="application">
+  <aside class="side" id="side" role="navigation" aria-label="Navegação principal">
     <div class="brand">
       <h1>Loterias Brasil IA</h1>
       <p>Motor probabilistico, cobertura de combinacoes e disciplina de risco.</p>
     </div>
     <div class="nav-title">Painel</div>
-    <button class="nav-btn active" data-view="dashboard" onclick="showView('dashboard')"><span class="nav-dot" style="background:var(--blue)"></span>Dashboard</button>
-    <button class="nav-btn" data-view="quick" onclick="showView('quick')"><span class="nav-dot" style="background:#22c55e"></span>Modo rapido</button>
-    <button class="nav-btn" data-view="picks" onclick="showView('picks')"><span class="nav-dot" style="background:var(--green)"></span>Palpites otimizados</button>
-    <button class="nav-btn" data-view="favorites" onclick="showView('favorites')"><span class="nav-dot" style="background:#f59e0b"></span>Favoritas</button>
-    <button class="nav-btn" data-view="backtest" onclick="showView('backtest')"><span class="nav-dot" style="background:#fb7185"></span>Backtest IA</button>
-    <button class="nav-btn" data-view="budget" onclick="showView('budget')"><span class="nav-dot" style="background:#38bdf8"></span>Orcamento IA</button>
-    <button class="nav-btn" data-view="wheel" onclick="showView('wheel')"><span class="nav-dot" style="background:#a78bfa"></span>Fechamento</button>
-    <button class="nav-btn" data-view="import" onclick="showView('import')"><span class="nav-dot" style="background:var(--yellow)"></span>Importar historico</button>
+    <button class="nav-btn active" data-view="dashboard" onclick="showView('dashboard')" aria-current="page"><span class="nav-dot" style="background:var(--blue)" aria-hidden="true"></span>Dashboard</button>
+    <button class="nav-btn" data-view="quick" onclick="showView('quick')"><span class="nav-dot" style="background:#22c55e" aria-hidden="true"></span>Modo rapido</button>
+    <button class="nav-btn" data-view="picks" onclick="showView('picks')"><span class="nav-dot" style="background:var(--green)" aria-hidden="true"></span>Palpites otimizados</button>
+    <button class="nav-btn" data-view="favorites" onclick="showView('favorites')"><span class="nav-dot" style="background:#f59e0b" aria-hidden="true"></span>Favoritas</button>
+    <button class="nav-btn" data-view="backtest" onclick="showView('backtest')"><span class="nav-dot" style="background:#fb7185" aria-hidden="true"></span>Backtest IA</button>
+    <button class="nav-btn" data-view="budget" onclick="showView('budget')"><span class="nav-dot" style="background:#38bdf8" aria-hidden="true"></span>Orcamento IA</button>
+    <button class="nav-btn" data-view="wheel" onclick="showView('wheel')"><span class="nav-dot" style="background:#a78bfa" aria-hidden="true"></span>Fechamento</button>
+    <button class="nav-btn" data-view="import" onclick="showView('import')"><span class="nav-dot" style="background:var(--yellow)" aria-hidden="true"></span>Importar historico</button>
     <div class="nav-title">Modalidades</div>
-    <div id="gameNav"></div>
+    <div id="gameNav" role="group" aria-label="Jogos"></div>
   </aside>
-  <main class="main">
-    <header class="top">
-      <button class="btn menu" onclick="toggleSide()">☰ Menu</button>
+  <main class="main" role="main">
+    <header class="top" role="banner">
+      <button class="btn menu" onclick="toggleSide()" aria-label="Abrir menu">☰ Menu</button>
       <div class="title">
         <h2 id="pageTitle">Dashboard</h2>
         <p id="pageSub">Analise matematica das principais loterias brasileiras</p>
       </div>
       <div class="top-actions">
-        <span class="pill" id="dataBadge">Base local</span>
-        <button class="btn" id="logBtn" style="display:none" onclick="showLogs()">⚠ <span id="logCount">0</span></button>
-        <button class="btn" onclick="toggleTheme()">Tema</button>
+        <span class="pill" id="dataBadge" aria-live="polite">Base local</span>
+        <button class="btn" id="logBtn" style="display:none" onclick="showLogs()" aria-label="Ver logs de erro">⚠ <span id="logCount">0</span></button>
+        <button class="btn" onclick="toggleTheme()" aria-label="Alternar tema">Tema</button>
       </div>
     </header>
     <section class="content">
-      <div class="notice">
+      <div class="notice" role="note">
         Sorteios de loteria sao eventos aleatorios independentes. Nenhum algoritmo aumenta a probabilidade fisica de uma combinacao especifica sair; este painel melhora qualidade operacional: evita padroes ruins de apostador, calcula chances reais, diversifica jogos e usa historico apenas como diagnostico.
       </div>
-      <section class="view active" id="view-dashboard">
-        <div class="grid kpis" id="kpis"></div>
-        <div class="grid cards" id="gameCards"></div>
+      <section class="view active" id="view-dashboard" aria-label="Dashboard">
+        <div class="grid kpis" id="kpis" aria-live="polite"></div>
+        <div class="grid cards" id="gameCards" aria-live="polite"></div>
       </section>
-      <section class="view" id="view-quick">
+      <section class="view" id="view-quick" aria-label="Modo rápido">
         <div class="card">
           <h3>Modo rapido</h3>
           <div class="toolbar">
-            <label class="field">Modalidade<select id="quickGame"></select></label>
-            <label class="field">Orcamento R$<input id="quickBudget" type="number" min="3" max="5000" value="30"></label>
-            <label class="field">Simulacoes<select id="quickSim"><option value="1000">1.000</option><option value="3000" selected>3.000</option><option value="5000">5.000</option></select></label>
+            <label class="field">Modalidade<select id="quickGame" aria-label="Selecionar modalidade"></select></label>
+            <label class="field">Orcamento R$<input id="quickBudget" type="number" min="3" max="5000" value="30" aria-label="Valor do orçamento"></label>
+            <label class="field">Simulacoes<select id="quickSim" aria-label="Quantidade de simulações"><option value="1000">1.000</option><option value="3000" selected>3.000</option><option value="5000">5.000</option></select></label>
             <button class="btn primary" onclick="runQuick()">Gerar rapido</button>
             <button class="btn" onclick="copyQuick()">Copiar</button>
             <button class="btn" onclick="saveQuick()">Salvar favorita</button>
           </div>
-          <div id="quickOutput" class="analysis"></div>
+          <div id="quickOutput" class="analysis" aria-live="polite"></div>
         </div>
       </section>
-      <section class="view" id="view-game">
-        <div id="gameView"></div>
+      <section class="view" id="view-game" aria-label="Detalhes do jogo">
+        <div id="gameView" aria-live="polite"></div>
       </section>
-      <section class="view" id="view-picks">
-        <div class="toolbar">
-          <label class="field">Modalidade<select id="bulkGame"></select></label>
-          <label class="field">Qtd. jogos<input id="bulkCount" type="number" min="1" max="50" value="10"></label>
-          <label class="field">Estrategia<select id="strategy"><option value="ai">IA Next-Gen (ensemble)</option><option value="balanced">Balanceada</option><option value="coverage">Cobertura</option><option value="contrarian">Contraria</option><option value="random">Aleatoria limpa</option></select></label>
-          <label class="field">Filtros<select id="filterMode"><option value="standard">Padrao rigoroso</option><option value="soft">Leve</option><option value="off">Desligado</option></select></label>
-          <label class="field range">Simulacoes<select id="simDepth"><option value="1000">1.000 (rapido)</option><option value="3000" selected>3.000 (medio)</option><option value="5000">5.000 (profundo)</option><option value="10000">10.000 (ultra)</option></select></label>
+      <section class="view" id="view-picks" aria-label="Palpites otimizados">
+        <div class="toolbar" role="group" aria-label="Configuração de palpites">
+          <label class="field">Modalidade<select id="bulkGame" aria-label="Selecionar modalidade"></select></label>
+          <label class="field">Qtd. jogos<input id="bulkCount" type="number" min="1" max="50" value="10" aria-label="Quantidade de jogos"></label>
+          <label class="field">Estrategia<select id="strategy" aria-label="Estratégia de geração"><option value="ai">IA Next-Gen (ensemble)</option><option value="balanced">Balanceada</option><option value="coverage">Cobertura</option><option value="contrarian">Contraria</option><option value="random">Aleatoria limpa</option></select></label>
+          <label class="field">Filtros<select id="filterMode" aria-label="Modo de filtro"><option value="standard">Padrao rigoroso</option><option value="soft">Leve</option><option value="off">Desligado</option></select></label>
+          <label class="field range">Simulacoes<select id="simDepth" aria-label="Profundidade de simulação"><option value="1000">1.000 (rapido)</option><option value="3000" selected>3.000 (medio)</option><option value="5000">5.000 (profundo)</option><option value="10000">10.000 (ultra)</option></select></label>
           <button class="btn primary" onclick="renderPicks()">Gerar</button>
           <button class="btn" onclick="copyPicks()">Copiar</button>
           <button class="btn" onclick="saveGenerated()">Salvar favorita</button>
         </div>
-        <div class="card" id="picksOutput"></div>
+        <div class="card" id="picksOutput" aria-live="polite"></div>
       </section>
-      <section class="view" id="view-favorites">
+      <section class="view" id="view-favorites" aria-label="Favoritos">
         <div class="toolbar">
           <button class="btn" onclick="renderFavorites()">Atualizar</button>
           <button class="btn danger" onclick="clearFavorites()">Limpar favoritas</button>
         </div>
-        <div class="card" id="favoritesOutput"></div>
+        <div class="card" id="favoritesOutput" aria-live="polite"></div>
       </section>
-      <section class="view" id="view-backtest">
-        <div class="toolbar">
-          <label class="field">Modalidade<select id="backtestGame"></select></label>
-          <label class="field">Concursos<input id="backtestDraws" type="number" min="20" max="200" value="80"></label>
-          <label class="field">Jogos por concurso<input id="backtestTickets" type="number" min="1" max="10" value="3"></label>
-          <label class="field">Simulacoes<select id="backtestSim"><option value="500">500</option><option value="1000" selected>1.000</option><option value="3000">3.000</option></select></label>
+      <section class="view" id="view-backtest" aria-label="Backtest">
+        <div class="toolbar" role="group" aria-label="Configuração de backtest">
+          <label class="field">Modalidade<select id="backtestGame" aria-label="Selecionar modalidade"></select></label>
+          <label class="field">Concursos<input id="backtestDraws" type="number" min="20" max="200" value="80" aria-label="Número de concursos"></label>
+          <label class="field">Jogos por concurso<input id="backtestTickets" type="number" min="1" max="10" value="3" aria-label="Jogos por concurso"></label>
+          <label class="field">Simulacoes<select id="backtestSim" aria-label="Quantidade de simulações"><option value="500">500</option><option value="1000" selected>1.000</option><option value="3000">3.000</option></select></label>
           <button class="btn primary" onclick="runBacktest()">Rodar backtest</button>
           <button class="btn" onclick="runAutoTune()">Auto-tune</button>
         </div>
-        <div class="card" id="backtestOutput"></div>
+        <div class="card" id="backtestOutput" aria-live="polite"></div>
       </section>
-      <section class="view" id="view-budget">
-        <div class="toolbar">
-          <label class="field">Modalidade<select id="budgetGame"></select></label>
-          <label class="field">Orcamento R$<input id="budgetValue" type="number" min="3" max="10000" value="50" step="1"></label>
-          <label class="field">Estrategia<select id="budgetStrategy"><option value="ai">IA Next-Gen</option><option value="coverage">Cobertura</option><option value="balanced">Balanceada</option></select></label>
-          <label class="field">Simulacoes<select id="budgetSim"><option value="1000">1.000</option><option value="3000" selected>3.000</option><option value="5000">5.000</option></select></label>
+      <section class="view" id="view-budget" aria-label="Orçamento">
+        <div class="toolbar" role="group" aria-label="Configuração de orçamento">
+          <label class="field">Modalidade<select id="budgetGame" aria-label="Selecionar modalidade"></select></label>
+          <label class="field">Orcamento R$<input id="budgetValue" type="number" min="3" max="10000" value="50" step="1" aria-label="Valor do orçamento"></label>
+          <label class="field">Estrategia<select id="budgetStrategy" aria-label="Estratégia"><option value="ai">IA Next-Gen</option><option value="coverage">Cobertura</option><option value="balanced">Balanceada</option></select></label>
+          <label class="field">Simulacoes<select id="budgetSim" aria-label="Quantidade de simulações"><option value="1000">1.000</option><option value="3000" selected>3.000</option><option value="5000">5.000</option></select></label>
           <button class="btn primary" onclick="runBudget()">Montar carteira</button>
           <button class="btn" onclick="copyBudget()">Copiar</button>
         </div>
-        <div class="card" id="budgetOutput"></div>
+        <div class="card" id="budgetOutput" aria-live="polite"></div>
       </section>
-      <section class="view" id="view-wheel">
-        <div class="toolbar">
-          <label class="field">Modalidade<select id="wheelGame"></select></label>
-          <label class="field">Base de dezenas<input id="wheelBase" type="number" min="7" max="25" value="18"></label>
-          <label class="field">Max jogos<input id="wheelLimit" type="number" min="1" max="200" value="30"></label>
+      <section class="view" id="view-wheel" aria-label="Fechamento">
+        <div class="toolbar" role="group" aria-label="Configuração de fechamento">
+          <label class="field">Modalidade<select id="wheelGame" aria-label="Selecionar modalidade"></select></label>
+          <label class="field">Base de dezenas<input id="wheelBase" type="number" min="7" max="25" value="18" aria-label="Base de dezenas"></label>
+          <label class="field">Max jogos<input id="wheelLimit" type="number" min="1" max="200" value="30" aria-label="Limite de jogos"></label>
           <button class="btn primary" onclick="runWheel()">Gerar fechamento</button>
           <button class="btn" onclick="copyWheel()">Copiar</button>
         </div>
-        <div class="card" id="wheelOutput"></div>
+        <div class="card" id="wheelOutput" aria-live="polite"></div>
       </section>
-      <section class="view" id="view-import">
+      <section class="view" id="view-import" aria-label="Importar histórico">
         <div class="grid two">
           <div class="card">
             <h3>Importar historico real</h3>
             <p class="analysis">Importe CSV, TXT, HTML/HTM da CAIXA. O parser extrai numeros automaticamente.</p>
             <div class="toolbar">
-              <label class="field">Modalidade<select id="importGame"></select></label>
-              <input class="file-input" id="historyFile" type="file" accept=".csv,.txt,.htm,.html,.xls,.xlsx" onchange="loadHistoryFile(event)">
+              <label class="field">Modalidade<select id="importGame" aria-label="Selecionar modalidade"></select></label>
+              <input class="file-input" id="historyFile" type="file" accept=".csv,.txt,.htm,.html,.xls,.xlsx" onchange="loadHistoryFile(event)" aria-label="Arquivo de histórico">
               <button class="btn" onclick="document.getElementById('historyFile').click()">Importar planilha</button>
               <button class="btn primary" onclick="importHistory()">Importar</button>
               <button class="btn danger" onclick="clearHistory()">Limpar historico</button>
             </div>
-            <div id="importMessage" class="analysis" style="margin-bottom:10px"></div>
-            <textarea id="historyText" spellcheck="false" placeholder="Cole aqui o historico de concursos..."></textarea>
+            <div id="importMessage" class="analysis" style="margin-bottom:10px" aria-live="polite"></div>
+            <textarea id="historyText" spellcheck="false" placeholder="Cole aqui o historico de concursos..." aria-label="Texto do histórico"></textarea>
           </div>
           <div class="card">
             <h3>Status da base</h3>
-            <div id="historyStatus" class="analysis"></div>
+            <div id="historyStatus" class="analysis" aria-live="polite"></div>
           </div>
         </div>
       </section>

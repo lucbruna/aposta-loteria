@@ -12,6 +12,7 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "typecheck:api": "cd server && npx tsc --noEmit",
+    "analyze": "vite-bundle-visualizer",
     "lint": "eslint . && tsc --noEmit && vitest run",
     "lint:ts": "eslint .",
     "prepare": "husky"
@@ -28,6 +29,7 @@
     "typescript": "^5.8.0",
     "typescript-eslint": "^8.60.1",
     "vite": "^6.0.0",
+    "vite-bundle-visualizer": "^1.2.1",
     "vite-plugin-pwa": "^1.3.0",
     "vitest": "^3.0.0"
   },

@@ -31,9 +31,9 @@ export function renderPicks(): void {
       $('picksOutput')!.innerHTML = `<h3>${g.name} | ${STATE.generated.length} jogos | ${strategy} | ${(window as any)._simCount.toLocaleString()} simulacoes</h3>
         <p class="analysis">${portfolioReport(g, STATE.generated)}</p>
         ${STATE.generated.map((p, i) => renderPickRow(g, p, i)).join('')}`;
-    } catch {
+    } catch (err) {
+      console.warn('Worker error, falling back to direct generation:', err);
       prog.done();
-      $('picksOutput')!.innerHTML = `<p class="analysis">Erro no worker, usando geracao direta...</p>`;
       STATE.generated = generateSet(g, count, strategy as any, filterMode as any, 0, (pct) => {
         prog.update(pct);
       });

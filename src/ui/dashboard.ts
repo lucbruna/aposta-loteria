@@ -27,20 +27,29 @@ export function renderDashboard(): void {
   }, 0);
   const onlineCount = Object.keys(latest).filter(k => latest[k]?.concurso).length;
 
+  const bestOddsName = [...GAMES].sort((a, b) => (a.odds || Infinity) - (b.odds || Infinity))[0]?.name || '';
+  const bestOddsVal = [...GAMES].sort((a, b) => (a.odds || Infinity) - (b.odds || Infinity))[0]?.odds;
+  const mostHist = Math.max(...GAMES.map(g => (STATE.history[g.id] || []).length));
+  const mostHistName = GAMES.find(g => (STATE.history[g.id] || []).length === mostHist)?.name || '';
+
   const heroHTML = `
     <div class="hero">
       <div class="hero-grid">
         <div class="hero-main">
-          <h2>Premio Acumulado Total</h2>
-          <div class="value" id="heroAccumulated">${fmt(totalAccumulated)}</div>
-          <div class="sub">${onlineCount} modalidades online · ${totalHist} concursos na base local</div>
+          <h2>${onlineCount ? 'Premio Acumulado Total' : 'Base de Analise'}</h2>
+          <div class="value" id="heroAccumulated">${onlineCount ? fmt(totalAccumulated) : totalHist + ' concursos'}</div>
+          <div class="sub">${onlineCount ? `${onlineCount} modalidades online · ${totalHist} na base local` : `${GAMES.length} modalidades · ${totalHist} concursos importados`}</div>
         </div>
         <div class="hero-stats">
-          ${[
+          ${onlineCount ? [
             ['Modalidades', String(GAMES.length), ''],
-            ['Online agora', String(onlineCount), onlineCount ? 'green' : ''],
+            ['Online agora', String(onlineCount), 'green'],
             ['Prox. Sorteio', nextDrawDate(latest), 'gold'],
-          ].map(s => `<div class="hero-stat"><div class="label">${s[0]}</div><div class="value${s[2] ? ' ' + s[2] : ''}">${s[1]}</div></div>`).join('')}
+          ].map(s => `<div class="hero-stat"><div class="label">${s[0]}</div><div class="value${s[2] ? ' ' + s[2] : ''}">${s[1]}</div></div>`) : [
+            ['Modalidades', String(GAMES.length), ''],
+            ['Melhor Chance', bestOddsName, 'green'],
+            ['Base local', String(totalHist), totalHist ? 'green' : ''],
+          ].map(s => `<div class="hero-stat"><div class="label">${s[0]}</div><div class="value${s[2] ? ' ' + s[2] : ''}">${s[1]}</div></div>`)}
         </div>
       </div>
     </div>`;
@@ -75,41 +84,48 @@ function renderEvolutionCard(g: Game): string {
   const hist = (STATE.history[g.id] || []).length;
   const accumulated = latest?.valorAcumulado || 0;
   const estimated = latest?.valorEstimadoProximoConcurso || 0;
-  const lastDraw = latest?.concurso || '—';
+  const lastDraw = latest?.concurso ? String(latest.concurso) : (hist ? String(hist) : '—');
   const lastDate = latest?.data || '';
   const lastNums: number[] = (latest?.dezenas || []).map(Number).filter((n: number) => !isNaN(n));
 
   const recentDraws = a.hist.slice(-5).reverse();
   const drawDots = recentDraws.slice(0, 5).map(d => {
-    const dots = d.main.slice(0, 3);
-    return `<span class="evol-dot hit" title="Concurso">${String(dots[0] ?? '').padStart(2, '0')}</span>`;
+    const first = d.main[0];
+    return `<span class="evol-dot hit" title="ultimos concursos">${first != null ? String(first).padStart(2, '0') : ''}</span>`;
   }).join('');
   const emptyDots = Math.max(0, 5 - recentDraws.length);
-  const emptyHTML = Array(emptyDots).fill('<span class="evol-dot" style="opacity:.3"></span>').join('');
+  const emptyHTML = Array(emptyDots).fill('<span class="evol-dot" style="opacity:.2"></span>').join('');
 
+  const online = !!(latest?.concurso);
   const maxPrize = Math.max(accumulated, estimated, 1);
-  const accumPct = Math.min(100, (accumulated / maxPrize) * 100);
+  const accumPct = online ? Math.min(100, (accumulated / maxPrize) * 100) : Math.min(100, hist * 3);
+  const freqPct = Math.min(100, a.score.slice(0, 5).reduce((s, x) => s + x.score, 0) / (a.score[0]?.score || 1) * 25);
 
   return `<div class="evolution-card" style="--accent:${g.color}" onclick="showGame('${g.id}')">
     <div class="evol-head">
       <span class="evol-name">${g.name}</span>
-      <span class="evol-prize">${fmt(accumulated)}</span>
+      <span class="evol-prize">${online ? fmt(accumulated) : (hist ? hist + ' conc' : '—')}</span>
     </div>
     <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:2px">
-      <span>Acumulado</span>
-      <span>Prox: ${fmt(estimated)}</span>
+      <span>${online ? 'Acumulado' : 'Frequencia media'}</span>
+      <span>${online ? 'Prox: ' + fmt(estimated) : (bestOddsText(g))}</span>
     </div>
     <div class="evol-bar-wrap">
-      <div class="evol-bar" style="width:${accumPct}%"></div>
+      <div class="evol-bar" style="width:${online ? accumPct : freqPct}%"></div>
     </div>
     <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px">
-      <span>Concurso ${lastDraw}</span>
+      <span>${online ? 'Concurso ' + lastDraw : (hist ? 'Ultimo concurso' : '')}</span>
       <span>${lastDate}</span>
       <span>${hist} registros</span>
     </div>
     ${lastNums.length ? `<div style="display:flex;gap:4px;margin-top:8px;flex-wrap:wrap">${lastNums.slice(0, 6).map(n => `<span class="ball small pick" style="--accent:${g.color};width:22px;height:22px;font-size:9px">${pad(n, g)}</span>`).join('')}</div>` : ''}
-    <div class="evol-dots">${drawDots}${emptyHTML}</div>
+    ${hist ? `<div class="evol-dots">${drawDots}${emptyHTML}</div>` : ''}
   </div>`;
+}
+
+function bestOddsText(g: Game): string {
+  if (!g.odds) return 'chance variavel';
+  return '1 em ' + g.odds.toLocaleString('pt-BR');
 }
 
 function animateValue(id: string, target: number): void {

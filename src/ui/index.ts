@@ -263,20 +263,45 @@ function loadEmbeddedData(): number {
 }
 
 async function tryFetchLatest(): Promise<void> {
-  const APIs = ['https://loteriascaixa-api.herokuapp.com/api', 'https://loteriascaixa-deploy.vercel.app/api'];
+  const APIs = [
+    'https://loteriascaixa-api.herokuapp.com/api',
+    'https://loteriascaixa-deploy.vercel.app/api',
+    'https://loteriaapi.vercel.app/api',
+  ];
   let ok = 0;
-  await Promise.all(GAMES.filter(g => !g.federal).map(async g => {
+  const gameList = GAMES.filter(g => !g.federal);
+  await Promise.all(gameList.map(async g => {
     for (const base of APIs) {
       try {
-        const r = await fetch(`${base}/${g.api}/latest`, { cache: 'no-store' });
+        const r = await fetch(`${base}/${g.api}/latest`, {
+          cache: 'no-store',
+          signal: AbortSignal.timeout(4000),
+        });
         if (!r.ok) continue;
         const data = await r.json();
         const nums = (data.dezenas || data.listaDezenas || []).map(Number).filter((n: number) => !Number.isNaN(n));
-        if (nums.length >= Math.min(g.pick, 6)) { STATE.latest[g.id] = data; ok++; break; }
-      } catch { /* empty */ }
+        if (nums.length >= Math.min(g.pick, 6)) {
+          STATE.latest[g.id] = data;
+          ok++;
+          if (data.valorAcumulado) STATE.latest[g.id].valorAcumulado = data.valorAcumulado;
+          if (data.valorEstimadoProximoConcurso) STATE.latest[g.id].valorEstimadoProximoConcurso = data.valorEstimadoProximoConcurso;
+          break;
+        }
+      } catch { /* try next API */ }
     }
   }));
-  if (ok) $('dataBadge')!.textContent = `Online: ${ok} resultados`;
+  const badge = $('dataBadge')!;
+  if (ok) {
+    const total = GAMES.reduce((s, g) => s + (STATE.history[g.id] || []).length, 0);
+    badge.textContent = `${ok}/${gameList.length} online · ${total} locais`;
+  } else {
+    const total = GAMES.reduce((s, g) => s + (STATE.history[g.id] || []).length, 0);
+    badge.textContent = total ? `${total} concursos locais` : 'Base local';
+  }
+  if (ok && $('kpis')?.innerHTML) {
+    const { renderDashboard } = await import('./dashboard');
+    renderDashboard();
+  }
 }
 
 init();

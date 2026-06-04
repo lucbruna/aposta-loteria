@@ -35,30 +35,29 @@ export const STATE: {
   analysisCache: {},
 };
 
-GAMES.forEach(g => {
-  STATE.selected[g.id] = [];
-  STATE.history[g.id] = loadHistory(g.id);
-});
-
 try {
+  GAMES.forEach(g => {
+    STATE.selected[g.id] = [];
+    STATE.history[g.id] = loadHistory(g.id);
+  });
+
   const c = JSON.parse(localStorage.getItem('analysisCache') || '{}');
   Object.assign(STATE.analysisCache, c);
-} catch { /* empty */ }
 
-try {
   const m = JSON.parse(localStorage.getItem('markovCache') || '{}');
   STATE.markovCache = m;
-} catch { STATE.markovCache = {}; }
 
-try {
   const cl = JSON.parse(localStorage.getItem('clusterCache') || '{}');
   STATE.clusterCache = cl;
-} catch { STATE.clusterCache = {}; }
 
-try {
   const gb = JSON.parse(localStorage.getItem('gbForests') || '{}');
   STATE.gbForests = gb;
-} catch { STATE.gbForests = {}; }
+} catch {
+  /* Worker mode: no localStorage, STATE stays with defaults */
+  STATE.markovCache = {};
+  STATE.clusterCache = {};
+  STATE.gbForests = {};
+}
 
 export function saveAnalysisCache(): void {
   const c: Record<string, { sig: string; data: any }> = {};

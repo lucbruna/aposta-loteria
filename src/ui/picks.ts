@@ -6,6 +6,7 @@ import { portfolioReport } from '../engine/score';
 import { renderPickRow } from './renderers';
 import { showProgress } from './progress';
 import { $ } from '../utils';
+import { generateWithWorker, terminateWorker } from './worker';
 
 export function renderPicks(): void {
   const g = GAMES.find(x => x.id === ($('bulkGame') as HTMLSelectElement).value) || GAMES[0];
@@ -16,17 +17,31 @@ export function renderPicks(): void {
 
   $('picksOutput')!.innerHTML = `<h3>${g.name}</h3><p class="analysis">Gerando ${count} jogos com estrategia <strong>${strategy}</strong>...</p>`;
 
-  setTimeout(() => {
+  setTimeout(async () => {
     const prog = showProgress('picksOutput', `Gerando ${count} jogos (${(window as any)._simCount.toLocaleString()} simulacoes)`);
+    const hist = STATE.history[g.id] || [];
 
-    STATE.generated = generateSet(g, count, strategy as any, filterMode as any, 0, (pct) => {
-      prog.update(pct);
-    });
-
-    prog.done();
-    $('picksOutput')!.style.setProperty('--accent', g.color);
-    $('picksOutput')!.innerHTML = `<h3>${g.name} | ${STATE.generated.length} jogos | ${strategy} | ${(window as any)._simCount.toLocaleString()} simulacoes</h3>
-      <p class="analysis">${portfolioReport(g, STATE.generated)}</p>
-      ${STATE.generated.map((p, i) => renderPickRow(g, p, i)).join('')}`;
+    try {
+      const tickets = await generateWithWorker(g, count, strategy, filterMode, 0, hist, (window as any)._simCount, (pct) => {
+        prog.update(pct);
+      });
+      STATE.generated = tickets;
+      prog.done();
+      $('picksOutput')!.style.setProperty('--accent', g.color);
+      $('picksOutput')!.innerHTML = `<h3>${g.name} | ${STATE.generated.length} jogos | ${strategy} | ${(window as any)._simCount.toLocaleString()} simulacoes</h3>
+        <p class="analysis">${portfolioReport(g, STATE.generated)}</p>
+        ${STATE.generated.map((p, i) => renderPickRow(g, p, i)).join('')}`;
+    } catch {
+      prog.done();
+      $('picksOutput')!.innerHTML = `<p class="analysis">Erro no worker, usando geracao direta...</p>`;
+      STATE.generated = generateSet(g, count, strategy as any, filterMode as any, 0, (pct) => {
+        prog.update(pct);
+      });
+      prog.done();
+      $('picksOutput')!.style.setProperty('--accent', g.color);
+      $('picksOutput')!.innerHTML = `<h3>${g.name} | ${STATE.generated.length} jogos | ${strategy} | ${(window as any)._simCount.toLocaleString()} simulacoes</h3>
+        <p class="analysis">${portfolioReport(g, STATE.generated)}</p>
+        ${STATE.generated.map((p, i) => renderPickRow(g, p, i)).join('')}`;
+    }
   }, 50);
 }

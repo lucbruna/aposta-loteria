@@ -20,7 +20,7 @@ function pad(n: number, g: Game): string {
 
 function getPrize(d: any): number {
   if (!d) return 0;
-  return d.valorAcumulado || d.acumulado || d.valorPremio || d.premio || 0;
+  return d.valorAcumuladoProximoConcurso || d.valorAcumulado || d.acumulado || d.valorPremio || d.premio || 0;
 }
 
 function getEstimated(d: any): number {

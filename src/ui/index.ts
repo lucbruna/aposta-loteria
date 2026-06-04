@@ -269,13 +269,13 @@ async function tryFetchLatest(): Promise<void> {
         if (!r.ok) continue;
         const data = await r.json();
         const nums = (data.dezenas || data.listaDezenas || []).map(Number).filter((n: number) => !Number.isNaN(n));
-        if (nums.length >= Math.min(g.pick, 6)) {
-          STATE.latest[g.id] = data;
-          ok++;
-          STATE.latest[g.id].valorAcumulado = data.valorAcumulado || data.acumulado || data.valorPremio || data.premio || 0;
-          STATE.latest[g.id].valorEstimadoProximoConcurso = data.valorEstimadoProximoConcurso || data.estimativa || data.estimado || data.valorEstimado || 0;
-          STATE.latest[g.id].dataProximoConcurso = data.dataProximoConcurso || data.data || data.proximoConcurso || '';
-          break;
+          if (nums.length >= Math.min(g.pick, 6)) {
+            STATE.latest[g.id] = data;
+            ok++;
+            STATE.latest[g.id].valorAcumuladoProximoConcurso = data.valorAcumuladoProximoConcurso || data.valorAcumulado || data.acumulado || data.valorPremio || data.premio || 0;
+            STATE.latest[g.id].valorEstimadoProximoConcurso = data.valorEstimadoProximoConcurso || data.estimativa || data.estimado || data.valorEstimado || 0;
+            STATE.latest[g.id].dataProximoConcurso = data.dataProximoConcurso || data.data || data.proximoConcurso || '';
+            break;
         }
       } catch { /* try next API */ }
     }

@@ -66,7 +66,7 @@ export function renderDashboard(): void {
   const evolutionHTML = `
     <h3 style="margin:0 0 8px;font-size:13px;font-weight:600">Painel de Evolucao</h3>
     <div class="evolution-grid">
-      ${GAMES.map(g => renderEvolutionCard(g)).join('')}
+      ${GAMES.map(g => { try { return renderEvolutionCard(g); } catch { return ''; } }).join('')}
     </div>`;
 
   $('kpis')!.innerHTML = heroHTML;

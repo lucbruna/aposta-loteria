@@ -275,6 +275,7 @@ async function tryFetchLatest(): Promise<void> {
             STATE.latest[g.id].valorAcumuladoProximoConcurso = data.valorAcumuladoProximoConcurso || data.valorAcumulado || data.acumulado || data.valorPremio || data.premio || 0;
             STATE.latest[g.id].valorEstimadoProximoConcurso = data.valorEstimadoProximoConcurso || data.estimativa || data.estimado || data.valorEstimado || 0;
             STATE.latest[g.id].dataProximoConcurso = data.dataProximoConcurso || data.data || data.proximoConcurso || '';
+            STATE.latest[g.id].data = data.data || data.dataProximoConcurso || '';
             break;
         }
       } catch { /* try next API */ }

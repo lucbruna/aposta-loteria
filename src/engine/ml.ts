@@ -3,22 +3,40 @@ import { range, hash, mulberry, sumArr } from '../utils';
 import { analyze } from './analyze';
 import { STATE, saveGBForests } from '../state';
 
+const _mlCache = new Map<string, { freq: number[]; m: number; sd: number; maxPP: number; histLen: number }>();
+
+function mlGetCache(g: Game, hist: DrawRow[]): { freq: number[]; m: number; sd: number; maxPP: number } | null {
+  if (!hist.length) return null;
+  const key = g.id + ':' + hist.length + ':' + (hist[0]?.raw || '') + ':' + (hist[hist.length - 1]?.raw || '');
+  const c = _mlCache.get(key);
+  if (c) return c;
+  const nums = range(g);
+  const t = hist.length;
+  const freq = nums.map(n => hist.filter(d => d.main.includes(n)).length);
+  const m = freq.reduce((a, b) => a + b, 0) / freq.length || 1;
+  const sd = Math.sqrt(freq.reduce((s, v) => s + (v - m) ** 2, 0) / freq.length) || 1;
+  const maxPP = freq.map((f, i) => f * t / 100).reduce((a, b) => Math.max(a, b), 1);
+  const entry = { freq, m, sd, maxPP, histLen: t };
+  _mlCache.set(key, entry);
+  if (_mlCache.size > 20) { const first = _mlCache.keys().next().value; if (first) _mlCache.delete(first); }
+  return entry;
+}
+
 export function mlFeatures(g: Game, hist: DrawRow[], num: number): MLFeatures {
   const nums = range(g);
   const t = hist.length;
   const ds = g.drawSize || g.pick;
-
-  const freq = hist.filter(d => d.main.includes(num)).length;
+  const cached = mlGetCache(g, hist);
+  const freq = cached ? cached.freq[num - g.min] : 0;
+  const m = cached?.m ?? 1;
+  const sd = cached?.sd ?? 1;
+  const maxPPVal = cached?.maxPP ?? 1;
   const lastIdx = hist.map((d, i) => d.main.includes(num) ? i : -1).filter(i => i >= 0);
   const gap = lastIdx.length ? t - 1 - lastIdx[lastIdx.length - 1] : t;
   const recency = t ? Math.min(gap / Math.max(3, t * 0.25), 1) : 0.5;
   const expected = ds / nums.length;
   const bayes = (freq + 1) / (t + 1 / expected);
-
-  const allFreq = nums.map(n => hist.filter(d => d.main.includes(n)).length);
-  const m = allFreq.reduce((a, b) => a + b, 0) / allFreq.length || 1;
-  const sd = Math.sqrt(allFreq.reduce((s, v) => s + (v - m) ** 2, 0) / allFreq.length) || 1;
-  const z = (freq - m) / sd;
+  const z = cached ? (freq - cached.m) / cached.sd : 0;
 
   const even = num % 2 === 0 ? 1 : 0;
   const high = num >= (g.min + g.max) / 2 ? 1 : 0;
@@ -29,9 +47,8 @@ export function mlFeatures(g: Game, hist: DrawRow[], num: number): MLFeatures {
     if (m.includes(num)) m.forEach(n => { if (n !== num) pairs.push(n); });
   });
   const pairPower = pairs.length;
-  const maxPP = nums.map(n => hist.filter(d => d.main.includes(n)).length * t / 100).reduce((a, b) => Math.max(a, b), 1);
 
-  return { freq, recency, bayes, z, even, high, pairPower: pairPower / maxPP, gap };
+  return { freq, recency, bayes, z, even, high, pairPower: pairPower / maxPPVal, gap };
 }
 
 function buildTree(
@@ -127,37 +144,47 @@ export function rfScore(g: Game, pick: number[], forest: MLTree[] | null): numbe
   return Math.round(scores.reduce((s, v) => s + v, 0) / scores.length * 100);
 }
 
+const _fourierCache = new Map<string, Map<number, number>>();
+
+export function clearMLCache(): void {
+  _mlCache.clear();
+  _fourierCache.clear();
+}
+
 export function fourierScore(g: Game, pick: number[]): number {
   const a = analyze(g);
   const hist = a.hist;
   const n = hist.length;
   if (n < 20) return 50;
 
-  const nums = range(g);
-  const periods = [3, 5, 7, 10, 15];
+  const cacheKey = g.id + ':' + hist.length + ':' + (hist[0]?.raw || '') + ':' + (hist[hist.length - 1]?.raw || '');
+  let numScoresMap = _fourierCache.get(cacheKey);
+  if (!numScoresMap) {
+    const nums = range(g);
+    const periods = [3, 5, 7, 10, 15];
+    numScoresMap = new Map();
 
-  const numScores = nums.map(num => {
-    const freq = hist.map(d => d.main.includes(num) ? 1 : 0);
-    let maxMag = 0;
-    for (const p of periods) {
-      let re = 0, im = 0;
-      for (let i = 0; i < freq.length; i++) {
-        const angle = 2 * Math.PI * i / p;
-        re += freq[i] * Math.cos(angle);
-        im -= freq[i] * Math.sin(angle);
+    for (const num of nums) {
+      const freq = hist.map(d => d.main.includes(num) ? 1 : 0);
+      let maxMag = 0;
+      for (const p of periods) {
+        let re = 0, im = 0;
+        for (let i = 0; i < freq.length; i++) {
+          const angle = 2 * Math.PI * i / p;
+          re += freq[i] * Math.cos(angle);
+          im -= freq[i] * Math.sin(angle);
+        }
+        const mag = Math.sqrt(re * re + im * im) / (freq.length || 1);
+        if (mag > maxMag) maxMag = mag;
       }
-      const mag = Math.sqrt(re * re + im * im) / (freq.length || 1);
-      if (mag > maxMag) maxMag = mag;
+      numScoresMap.set(num, maxMag);
     }
-    return { num, score: maxMag };
-  });
+    _fourierCache.set(cacheKey, numScoresMap);
+    if (_fourierCache.size > 10) { const first = _fourierCache.keys().next().value; if (first) _fourierCache.delete(first); }
+  }
 
-  const maxS = Math.max(...numScores.map(x => x.score), 0.001);
-  const pickScore = pick.reduce((s, n) => {
-    const fs = numScores.find(x => x.num === n);
-    return s + (fs ? fs.score / maxS : 0);
-  }, 0);
-
+  const maxS = Math.max(...Array.from(numScoresMap.values()), 0.001);
+  const pickScore = pick.reduce((s, n) => s + (numScoresMap!.get(n) || 0) / maxS, 0);
   return Math.round(pickScore / pick.length * 100);
 }
 

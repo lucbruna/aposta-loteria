@@ -119,6 +119,23 @@ textarea{width:100%;min-height:160px;resize:vertical;background:var(--panel-2);b
 .freq-bar{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 40%,#fff));transition:width .6s}
 .freq-val{font-size:8px;color:var(--muted);width:22px;text-align:right}
 
+.evol-muted-row{display:flex;justify-content:space-between;font-size:10px;color:var(--muted)}
+.evol-muted-row.mb{margin-bottom:2px}
+.evol-muted-row.mt{margin-top:2px}
+.evol-next-date{font-size:10px;color:var(--accent);margin-top:4px;font-weight:600}
+.evol-balls-row{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}
+.evol-ball{width:22px!important;height:22px!important;font-size:9px!important}
+.evol-top5-header{font-size:9px;color:var(--muted);margin-bottom:4px;font-weight:600}
+.evol-top5-section{margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+.canvas-box{height:200px}
+.canvas-box.tall{height:240px}
+
+.section-title{margin:0 0 8px;font-size:13px;font-weight:600}
+.game-toolbar{--accent:var(--blue)}
+.game-kpis{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
+.balls-spaced{margin-bottom:12px}
+.game-value-sm{font-size:15px!important}
+
 @media(max-width:940px){
   .app{grid-template-columns:1fr}
   .side{position:fixed;z-index:10;left:0;top:0;transform:translateX(-105%);transition:.2s;width:270px}

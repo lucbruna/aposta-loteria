@@ -78,7 +78,7 @@ export function renderDashboard(): void {
     </div>`;
 
   const evolutionHTML = `
-    <h3 style="margin:0 0 8px;font-size:13px;font-weight:600">Painel de Evolucao</h3>
+    <h3 class="section-title">Painel de Evolucao</h3>
     <div class="evolution-grid">
       ${[...GAMES].sort((a, b) => {
         const ap = getPrize(STATE.latest?.[a.id]) || 0;
@@ -157,22 +157,22 @@ function renderEvolutionCard(g: Game): string {
       <span class="evol-name">${g.name}</span>
       <span class="evol-prize">${online ? fmt(accumulated) : (hist ? hist + ' conc' : '—')}</span>
     </div>
-    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:2px">
+    <div class="evol-muted-row mb">
       <span>${online ? 'Acumulado' : 'Frequencia media'}</span>
       <span>${online ? (estimated ? 'Prox: ' + fmt(estimated) : '') : (bestOddsText(g))}</span>
     </div>
     <div class="evol-bar-wrap">
       <div class="evol-bar" style="width:${online ? accumPct : freqPct}%"></div>
     </div>
-    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px">
+    <div class="evol-muted-row mt">
       <span>${online ? 'Concurso ' + lastDraw : (hist ? 'Ultimo concurso' : '')}</span>
       <span>${lastDate}</span>
       <span>${hist} registros</span>
     </div>
-    ${nextDate ? `<div style="font-size:10px;color:var(--accent);margin-top:4px;font-weight:600">Proximo: ${nextDate}</div>` : ''}
-    ${lastNums.length ? `<div style="display:flex;gap:4px;margin-top:8px;flex-wrap:wrap">${lastNums.slice(0, 6).map(n => `<span class="ball small pick" style="--accent:${g.color};width:22px;height:22px;font-size:9px">${pad(n, g)}</span>`).join('')}</div>` : ''}
+    ${nextDate ? `<div class="evol-next-date">Proximo: ${nextDate}</div>` : ''}
+    ${lastNums.length ? `<div class="evol-balls-row">${lastNums.slice(0, 6).map(n => `<span class="ball small pick evol-ball" style="--accent:${g.color}">${pad(n, g)}</span>`).join('')}</div>` : ''}
     ${hist ? `<div class="evol-dots">${drawDots}${emptyHTML}</div>` : ''}
-    ${freqBars ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--line)"><div style="font-size:9px;color:var(--muted);margin-bottom:4px;font-weight:600">TOP 5 FREQ</div>${freqBars}</div>` : ''}
+    ${freqBars ? `<div class="evol-top5-section"><div class="evol-top5-header">TOP 5 FREQ</div>${freqBars}</div>` : ''}
   </div>`;
 }
 
@@ -209,7 +209,7 @@ export function renderGame(g: Game): void {
   const estimated = getEstimated(latest);
 
   $('gameView')!.innerHTML = `
-    <div class="toolbar" style="--accent:${g.color}">
+    <div class="toolbar game-toolbar" style="--accent:${g.color}">
       <button class="btn primary" onclick="autoFill('${g.id}')">Sugestao IA</button>
       <button class="btn" onclick="clearSel('${g.id}')">Limpar</button>
       <button class="btn" onclick="copyCurrent('${g.id}')">Copiar jogo</button>
@@ -217,23 +217,23 @@ export function renderGame(g: Game): void {
       ${accumulated ? `<span class="pill prize">Acumulado: ${fmtMoney(accumulated)}</span>` : ''}
       ${estimated ? `<span class="pill premium">Prox: ${fmtMoney(estimated)}</span>` : ''}
     </div>
-    <div class="grid kpis" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))">
+    <div class="grid kpis game-kpis">
       <div class="card kpi"><div class="label">Aposta base</div><div class="value">${fmtMoney(g.price)}</div><div class="sub">${g.draw}</div></div>
       <div class="card kpi"><div class="label">Probabilidade</div><div class="value">${prob}</div><div class="sub">por jogo simples</div></div>
       <div class="card kpi"><div class="label">Historico</div><div class="value">${a.hist.length}</div><div class="sub">concursos</div></div>
       <div class="card kpi"><div class="label">Score atual</div><div class="value">${sel.length ? scoreTicket(g, sel) : '-'}</div><div class="sub">${sel.length}/${g.pick} selecionados</div></div>
-      ${nextDraw ? `<div class="card kpi"><div class="label">Proximo sorteio</div><div class="value" style="font-size:15px">${nextDraw}</div><div class="sub">${estimated ? fmtMoney(estimated) : ''}</div></div>` : ''}
+      ${nextDraw ? `<div class="card kpi"><div class="label">Proximo sorteio</div><div class="value game-value-sm">${nextDraw}</div><div class="sub">${estimated ? fmtMoney(estimated) : ''}</div></div>` : ''}
     </div>
     <div class="grid two" style="--accent:${g.color}">
       <div class="card"><h3>Volante</h3><div class="balls">${renderNumberGrid(g, a, sel)}</div></div>
       <div class="card"><h3>Aposta</h3>
-        <div class="balls" style="margin-bottom:12px">${sel.length ? sel.map((n: number) => `<span class="ball pick" onclick="toggleNum('${g.id}',${n})" style="--accent:${g.color}">${String(n).padStart(g.max > 99 ? 5 : 2, '0')}</span>`).join('') : '<span class="analysis">Nenhum numero.</span>'}</div>
+        <div class="balls balls-spaced">${sel.length ? sel.map((n: number) => `<span class="ball pick" onclick="toggleNum('${g.id}',${n})" style="--accent:${g.color}">${String(n).padStart(g.max > 99 ? 5 : 2, '0')}</span>`).join('') : '<span class="analysis">Nenhum numero.</span>'}</div>
         <div class="analysis">${suggestionText(g, a, sel)}<br><br>${sel.length === g.pick ? advancedInsight(g, sel) : advancedInsight(g, generated[0].main)}</div>
       </div>
     </div>
     <div class="grid two" style="margin-top:14px;--accent:${g.color}">
       <div class="card"><h3>Frequencia</h3>
-        <div style="height:200px"><canvas id="freqChart-${g.id}"></canvas></div>
+        <div class="canvas-box"><canvas id="freqChart-${g.id}"></canvas></div>
       </div>
       <div class="card"><h3>Top 5 IA</h3>
         <p class="analysis">${portfolioReport(g, generated)}</p>
@@ -243,7 +243,7 @@ export function renderGame(g: Game): void {
     <div class="grid two" style="margin-top:14px;--accent:${g.color}">
       <div class="card"><h3>Forca</h3>${renderMetrics(g, a.score.slice(0, 12), a)}</div>
       <div class="card"><h3>Pares</h3>
-        <div style="height:240px"><canvas id="pairChart-${g.id}"></canvas></div>
+        <div class="canvas-box tall"><canvas id="pairChart-${g.id}"></canvas></div>
       </div>
     </div>`;
 

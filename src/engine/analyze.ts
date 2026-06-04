@@ -1,6 +1,9 @@
 import type { Game, AnalysisResult, AnalysisProfile, NumberScore, DrawRow } from '../types';
 import { range, sumArr, countRuns } from '../utils';
-import { STATE, saveAnalysisCache } from '../state';
+import { STATE, saveAnalysisCache, saveMarkovCache, saveClusterCache, saveGBForests } from '../state';
+import { buildMarkov } from './markov';
+import { kmeans } from './cluster';
+import { gbBuildForest } from './ml';
 
 export function analyze(g: Game): AnalysisResult {
   const hist = STATE.history[g.id] || [];
@@ -55,6 +58,27 @@ export function analyze(g: Game): AnalysisResult {
   const result: AnalysisResult = { hist, total, score, freq, pair, pairPower, profile, top, cold, weights, mean, sd };
   STATE.analysisCache[g.id] = { sig, data: result };
   saveAnalysisCache();
+
+  if (!STATE.markovCache) STATE.markovCache = {};
+  const cachedMk = STATE.markovCache[g.id];
+  if (!cachedMk || cachedMk.sig !== sig) {
+    STATE.markovCache[g.id] = buildMarkov(g, hist);
+    saveMarkovCache();
+  }
+
+  if (!STATE.clusterCache) STATE.clusterCache = {};
+  if (!STATE.clusterCache[g.id]) {
+    STATE.clusterCache[g.id] = kmeans(g, hist);
+    saveClusterCache();
+  }
+
+  if (!STATE.gbForests) STATE.gbForests = {};
+  const hadGB = STATE.gbForests[g.id] && (STATE.gbForests[g.id] as any)._sig === sig;
+  if (!hadGB && hist.length >= 30) {
+    STATE.gbForests[g.id] = gbBuildForest(g, hist) as any;
+    saveGBForests();
+  }
+
   return result;
 }
 
@@ -119,7 +143,7 @@ export function onlineUpdate(g: Game, newDraws: DrawRow[]): void {
   const nums = range(g);
   const values = nums.map(n => a.freq.get(n)!);
   a.mean = values.reduce((a, b) => a + b, 0) / values.length;
-  a.sd = Math.sqrt(values.reduce((s, v) => s + (v - a.mean) ** 2, 0) / values.length) || 1;
+  a.sd = Math.sqrt(values.reduce((s, v) => s + (a.mean - v) ** 2, 0) / values.length) || 1;
 
   const pairPower = new Map(nums.map(n => [n, 0]));
   a.pair.forEach((v: number, key: string) => key.split('-').map(Number).forEach((n: number) => pairPower.set(n, (pairPower.get(n) || 0) + v)));
@@ -134,4 +158,9 @@ export function onlineUpdate(g: Game, newDraws: DrawRow[]): void {
     const pairs = (pairPower.get(n) || 0) / pairMax;
     a.weights.set(n, Math.round(Math.max(1, Math.min(99, 50 + z * 8 + recency * 13 + bayes * 112 + central * 3 + pairs * 8))));
   });
+
+  const sig = `${hist.length}:${hist[0]?.raw || ''}:${hist[hist.length - 1]?.raw || ''}`;
+  if (STATE.markovCache) delete STATE.markovCache[g.id];
+  if (STATE.clusterCache) delete STATE.clusterCache[g.id];
+  if (STATE.gbForests) delete STATE.gbForests[g.id];
 }

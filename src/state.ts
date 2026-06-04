@@ -1,5 +1,8 @@
 import type { DrawRow } from './types';
 import { GAMES } from './config';
+import type { MarkovChain } from './engine/markov';
+import type { ClusterResult } from './engine/cluster';
+import type { MLTree } from './types';
 
 export const STATE: {
   view: string;
@@ -13,7 +16,10 @@ export const STATE: {
   quick: any[];
   favorites: any[];
   analysisCache: Record<string, { sig: string; data: any }>;
-  forests?: Record<string, any[] | null>;
+  forests?: Record<string, MLTree[] | null>;
+  markovCache?: Record<string, MarkovChain | null>;
+  clusterCache?: Record<string, ClusterResult | null>;
+  gbForests?: Record<string, any[] | null>;
   _simCount?: number;
 } = {
   view: 'dashboard',
@@ -39,12 +45,39 @@ try {
   Object.assign(STATE.analysisCache, c);
 } catch { /* empty */ }
 
+try {
+  const m = JSON.parse(localStorage.getItem('markovCache') || '{}');
+  STATE.markovCache = m;
+} catch { STATE.markovCache = {}; }
+
+try {
+  const cl = JSON.parse(localStorage.getItem('clusterCache') || '{}');
+  STATE.clusterCache = cl;
+} catch { STATE.clusterCache = {}; }
+
+try {
+  const gb = JSON.parse(localStorage.getItem('gbForests') || '{}');
+  STATE.gbForests = gb;
+} catch { STATE.gbForests = {}; }
+
 export function saveAnalysisCache(): void {
   const c: Record<string, { sig: string; data: any }> = {};
   for (const [k, v] of Object.entries(STATE.analysisCache)) {
     c[k] = { sig: v.sig, data: v.data };
   }
   localStorage.setItem('analysisCache', JSON.stringify(c));
+}
+
+export function saveMarkovCache(): void {
+  localStorage.setItem('markovCache', JSON.stringify(STATE.markovCache || {}));
+}
+
+export function saveClusterCache(): void {
+  localStorage.setItem('clusterCache', JSON.stringify(STATE.clusterCache || {}));
+}
+
+export function saveGBForests(): void {
+  localStorage.setItem('gbForests', JSON.stringify(STATE.gbForests || {}));
 }
 
 export function saveHistory(id: string): void {

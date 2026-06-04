@@ -28,7 +28,9 @@ export {
   popularPatternPenalty,
   passesFilters,
 } from './engine/filters';
-export { mlBuildForest, mlPredict, rfScore, fourierScore } from './engine/ml';
+export { mlBuildForest, mlPredict, rfScore, fourierScore, gbBuildForest, gbScore } from './engine/ml';
+export { buildMarkov, markovScore, markovTransitions } from './engine/markov';
+export { kmeans, clusterFit } from './engine/cluster';
 export { mcTickets } from './engine/montecarlo';
 export { mctsTicket } from './engine/mcts';
 export { geneticTicket } from './engine/genetic';

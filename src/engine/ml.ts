@@ -1,6 +1,7 @@
 import type { Game, MLFeatures, MLTree, AnalysisResult, DrawRow } from '../types';
-import { range, hash, mulberry } from '../utils';
+import { range, hash, mulberry, sumArr } from '../utils';
 import { analyze } from './analyze';
+import { STATE, saveGBForests } from '../state';
 
 export function mlFeatures(g: Game, hist: DrawRow[], num: number): MLFeatures {
   const nums = range(g);
@@ -158,4 +159,121 @@ export function fourierScore(g: Game, pick: number[]): number {
   }, 0);
 
   return Math.round(pickScore / pick.length * 100);
+}
+
+export interface GBTree {
+  pred: number;
+  feat?: string;
+  th?: number;
+  l?: GBTree;
+  r?: GBTree;
+}
+
+export function gbBuildForest(g: Game, hist: DrawRow[], trees: number = 15, lr: number = 0.1): GBTree[] | null {
+  if (hist.length < 30) return null;
+  const sig = `${g.id}:${hist.length}:${hist[0]?.raw || ''}:${hist[hist.length - 1]?.raw || ''}`;
+  const cached = STATE.gbForests?.[g.id];
+  if (cached && (cached as any)._sig === sig) return cached as any;
+
+  const nums = range(g);
+  const maxDepth = 3;
+  const forest: GBTree[] = [];
+
+  const outcomes = nums.map(num => {
+    const splitIdx = Math.floor(hist.length * 0.7);
+    const trainHist = hist.slice(0, splitIdx);
+    const testHist = hist.slice(splitIdx);
+    const features = mlFeatures(g, trainHist, num);
+    const appeared = testHist.some(d => d.main.includes(num)) ? 1 : 0;
+    return { features, appeared };
+  });
+
+  let residuals = outcomes.map(o => o.appeared);
+
+  for (let t = 0; t < trees; t++) {
+    const rng = mulberry(t * 3571 + hash('gb' + g.id));
+    const usedFeatures = new Set<string>();
+    const allFeats = ['freq', 'recency', 'bayes', 'z', 'even', 'high', 'pairPower', 'gap'];
+    while (usedFeatures.size < 3) usedFeatures.add(allFeats[Math.floor(rng() * allFeats.length)]);
+
+    const tree = buildGBTree(
+      outcomes.map((o, i) => ({ features: o.features, residual: residuals[i] })),
+      usedFeatures, 0, maxDepth
+    );
+    forest.push(tree);
+
+    const preds = outcomes.map((o, idx) => gbPredict(tree, o.features));
+    residuals = residuals.map((r, idx) => r - preds[idx] * lr);
+  }
+
+  (forest as any)._sig = sig;
+  if (!STATE.gbForests) STATE.gbForests = {};
+  STATE.gbForests[g.id] = forest as any;
+  saveGBForests();
+  return forest;
+}
+
+function buildGBTree(
+  examples: Array<{ features: MLFeatures; residual: number }>,
+  usedFeatures: Set<string>,
+  depth: number,
+  maxDepth: number,
+): GBTree {
+  if (depth >= maxDepth || examples.length < 4) {
+    return { pred: examples.reduce((s, e) => s + e.residual, 0) / Math.max(examples.length, 1) };
+  }
+
+  const feats = [...usedFeatures];
+  let bestGain = Infinity;
+  let bestFeat = feats[0];
+  let bestThresh = 0;
+
+  for (const f of feats) {
+    const vals = examples.map(e => (e.features as any)[f]);
+    const sorted = [...new Set(vals)].sort((a, b) => a - b);
+    for (let i = 0; i < sorted.length - 1; i++) {
+      const th = (sorted[i] + sorted[i + 1]) / 2;
+      const left = examples.filter(e => (e.features as any)[f] <= th);
+      const right = examples.filter(e => (e.features as any)[f] > th);
+      if (!left.length || !right.length) continue;
+
+      const meanL = left.reduce((s, e) => s + e.residual, 0) / left.length;
+      const meanR = right.reduce((s, e) => s + e.residual, 0) / right.length;
+      const mse = left.reduce((s, e) => s + (e.residual - meanL) ** 2, 0) +
+                  right.reduce((s, e) => s + (e.residual - meanR) ** 2, 0);
+      if (mse < bestGain) { bestGain = mse; bestFeat = f; bestThresh = th; }
+    }
+  }
+
+  const left = examples.filter(e => (e.features as any)[bestFeat] <= bestThresh);
+  const right = examples.filter(e => (e.features as any)[bestFeat] > bestThresh);
+  if (!left.length || !right.length) {
+    return { pred: examples.reduce((s, e) => s + e.residual, 0) / examples.length };
+  }
+
+  return {
+    pred: 0,
+    feat: bestFeat,
+    th: bestThresh,
+    l: buildGBTree(left, usedFeatures, depth + 1, maxDepth),
+    r: buildGBTree(right, usedFeatures, depth + 1, maxDepth),
+  };
+}
+
+export function gbPredict(tree: GBTree, features: MLFeatures): number {
+  if (tree.feat == null) return tree.pred;
+  return (features as any)[tree.feat] <= tree.th!
+    ? (tree.l ? gbPredict(tree.l, features) : 0)
+    : (tree.r ? gbPredict(tree.r, features) : 0);
+}
+
+export function gbScore(g: Game, pick: number[], forest: GBTree[] | null, lr: number = 0.1): number {
+  if (!forest) return 50;
+  const a = analyze(g);
+  const scores = pick.map(n => {
+    const feats = mlFeatures(g, a.hist, n);
+    return forest.reduce((s, t) => s + gbPredict(t, feats) * lr, 0);
+  });
+  const raw = scores.reduce((s, v) => s + v, 0) / scores.length;
+  return Math.round(Math.min(99, Math.max(1, (raw + 0.5) * 100)));
 }

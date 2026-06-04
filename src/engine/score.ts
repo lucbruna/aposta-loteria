@@ -1,6 +1,8 @@
 import type { Game, AnalysisResult, AIReply } from '../types';
 import { profileScore, pairScore, entropyScore, popularPatternPenalty } from './filters';
-import { rfScore, fourierScore } from './ml';
+import { rfScore, fourierScore, gbScore } from './ml';
+import { markovScore } from './markov';
+import { clusterFit } from './cluster';
 import { analyze } from './analyze';
 import { ENGINE, GAMES, SOURCE_NOTE } from '../config';
 import { STATE } from '../state';
@@ -17,7 +19,20 @@ export function scoreTicket(g: Game, pick: number[], analysis?: AnalysisResult):
   const pair = pairScore(g, pick, a);
   const entropy = entropyScore(g, pick);
   const penalty = popularPatternPenalty(g, pick);
-  return Math.round(Math.max(1, Math.min(99, avg * 0.42 + balance * 0.14 + spans * 0.08 + profile * 0.18 + pair * 0.1 + entropy * 0.08 - penalty)));
+
+  const markov = STATE.markovCache?.[g.id] || null;
+  const mk = markov ? markovScore(g, pick, markov) / 100 : 0;
+
+  const cluster = STATE.clusterCache?.[g.id] || null;
+  const cl = cluster ? clusterFit(g, pick, cluster) / 100 : 0;
+
+  const gb = STATE.gbForests?.[g.id] || null;
+  const gbScoreVal = gb ? gbScore(g, pick, gb as any) / 100 : 0;
+
+  return Math.round(Math.max(1, Math.min(99,
+    avg * 0.28 + balance * 0.10 + spans * 0.06 + profile * 0.14 +
+    pair * 0.08 + entropy * 0.06 + mk * 0.12 + cl * 0.10 + gbScoreVal * 0.06 - penalty
+  )));
 }
 
 export function enhancedFit(
@@ -52,7 +67,14 @@ export function enhancedFit(
   const ml = forest ? rfScore(g, pick, forest) / 2 : 0;
   const fourier = fourierScore(g, pick) * 0.15;
 
-  return base * 0.25 + prof * 0.12 + pair * 0.1 + entropy * 0.06 + ts * 0.12 + diversity * 0.08 - pop * 0.04 + ml * 0.1 + fourier * 0.08 + noise;
+  const markov = STATE.markovCache?.[g.id] || null;
+  const mk = markov ? markovScore(g, pick, markov) * 0.08 : 0;
+
+  const gb = STATE.gbForests?.[g.id] || null;
+  const gbVal = gb ? gbScore(g, pick, gb as any) * 0.05 : 0;
+
+  return base * 0.22 + prof * 0.10 + pair * 0.08 + entropy * 0.05 + ts * 0.10 +
+    diversity * 0.07 - pop * 0.04 + ml * 0.08 + fourier * 0.06 + mk + gbVal + noise;
 }
 
 export function ensembleScore(g: Game, pick: number[], forest: any[] | null): number {
@@ -62,7 +84,14 @@ export function ensembleScore(g: Game, pick: number[], forest: any[] | null): nu
   const ent = entropyScore(g, pick);
   const rf = rfScore(g, pick, forest);
   const fourier = fourierScore(g, pick);
-  const final = Math.round(base * 0.3 + prof * 0.12 + ent * 0.08 + rf * 0.3 + fourier * 0.15);
+
+  const markov = STATE.markovCache?.[g.id] || null;
+  const mk = markov ? markovScore(g, pick, markov) : 50;
+
+  const gb = STATE.gbForests?.[g.id] || null;
+  const gbV = gb ? gbScore(g, pick, gb as any) : 50;
+
+  const final = Math.round(base * 0.22 + prof * 0.10 + ent * 0.06 + rf * 0.22 + fourier * 0.10 + mk * 0.15 + gbV * 0.15);
   return Math.min(99, Math.max(1, final));
 }
 
@@ -73,9 +102,52 @@ export function aiReport(g: Game, pick: number[]): AIReply {
   const pair = pairScore(g, pick, a);
   const entropy = entropyScore(g, pick);
   const penalty = popularPatternPenalty(g, pick);
+
+  const markov = STATE.markovCache?.[g.id] || null;
+  const mk = markov ? markovScore(g, pick, markov) : 50;
+
+  const cluster = STATE.clusterCache?.[g.id] || null;
+  const cl = cluster ? clusterFit(g, pick, cluster) : 50;
+
   const grade = scoreTicket(g, pick, a) >= 82 ? 'Elite' : scoreTicket(g, pick, a) >= 70 ? 'Forte' : 'Moderado';
   const risk = penalty > 12 ? 'padrao popular penalizado' : entropy < 55 ? 'baixa dispersao' : 'perfil equilibrado';
   return { grade, profile, pair, entropy, risk };
+}
+
+function calcCoverage(g: Game, set: any[]): number {
+  const all = set.flatMap(x => x.main);
+  return new Set(all).size;
+}
+
+function calcOverlap(g: Game, set: any[]): number {
+  if (set.length < 2) return 0;
+  const distances = set[0].main.map((n: number) => set.slice(1).filter((x: any) => x.main.includes(n)).length);
+  const avg = distances.reduce((a: number, b: number) => a + b, 0) / Math.max(distances.length, 1);
+  return Math.round((1 - avg / g.pick) * 100);
+}
+
+function calcDiversification(g: Game, set: any[]): number {
+  if (set.length < 2) return 100;
+  const uniquePairs = new Set<string>();
+  const totalPairs = set.flatMap(t => {
+    const m = t.main;
+    const pairs: string[] = [];
+    for (let i = 0; i < m.length; i++)
+      for (let j = i + 1; j < m.length; j++)
+        pairs.push(m[i] < m[j] ? m[i] + '-' + m[j] : m[j] + '-' + m[i]);
+    return pairs;
+  });
+  totalPairs.forEach(p => uniquePairs.add(p));
+  const totalPossible = (g.pick * (g.pick - 1) / 2) * set.length;
+  return Math.round((uniquePairs.size / Math.max(totalPossible, 1)) * 100);
+}
+
+function calcClusterSpread(g: Game, set: any[]): number {
+  const cluster = STATE.clusterCache?.[g.id];
+  if (!cluster || set.length < 2) return 50;
+  const clusterIds = set.map(t => clusterFit(g, t.main, cluster));
+  const unique = new Set(clusterIds).size;
+  return Math.round((unique / cluster.centroids.length) * 100);
 }
 
 export function portfolioReport(g: Game, set: any[]): string {
@@ -84,11 +156,24 @@ export function portfolioReport(g: Game, set: any[]): string {
   const unique = new Set(all).size;
   const coverage = Math.round(unique / (g.max - g.min + 1) * 100);
   const avg = Math.round(set.reduce((s, x) => s + x.score, 0) / Math.max(set.length, 1));
-  const overlap = set.length < 2 ? 0 : Math.round((1 - (() => {
-    const distances = set[0].main.map((n: number) => set.slice(1).filter((x: any) => x.main.includes(n)).length);
-    return distances.reduce((a: number, b: number) => a + b, 0) / Math.max(distances.length, 1);
-  })() / g.pick) * 100);
+  const overlap = calcOverlap(g, set);
+  const diversification = calcDiversification(g, set);
+  const clusterSpread = calcClusterSpread(g, set);
   const sims = (window as any)._simCount || ENGINE.sims;
   const hasRF = !!STATE.forests?.[g.id];
-  return `IA Next-Gen: ${sims.toLocaleString()} simulacoes MC + GA + MCTS${hasRF ? ' + RF + Fourier' : ''} | score medio ${avg}/99 | cobertura ${coverage}% | sobreposicao ${Math.max(0, overlap)}% | ensemble: frequencia temporal + matriz co-ocorrencia + ML supervisionado.`;
+  const hasGB = !!STATE.gbForests?.[g.id];
+  const hasMarkov = !!STATE.markovCache?.[g.id];
+  const hasCluster = !!STATE.clusterCache?.[g.id];
+  return [
+    `IA Next-Gen: ${sims.toLocaleString()} simulacoes MC + GA + MCTS`,
+    hasRF ? '+ RF' : '',
+    hasGB ? '+ GradBoost' : '',
+    hasMarkov ? '+ Markov' : '',
+    hasCluster ? '+ Cluster' : '',
+    `| score medio ${avg}/99`,
+    `| cobertura ${coverage}%`,
+    `| sobreposicao ${Math.max(0, overlap)}%`,
+    `| diversificacao ${diversification}%`,
+    `| dispersao ${clusterSpread}%`,
+  ].filter(Boolean).join(' ');
 }

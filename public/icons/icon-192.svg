@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <rect width="192" height="192" rx="32" fill="#071018"/>
+  <circle cx="96" cy="72" r="36" fill="none" stroke="#10b981" stroke-width="3"/>
+  <circle cx="68" cy="120" r="24" fill="none" stroke="#e11d48" stroke-width="3"/>
+  <circle cx="128" cy="120" r="24" fill="none" stroke="#8b5cf6" stroke-width="3"/>
+  <text x="96" y="168" text-anchor="middle" fill="#38bdf8" font-family="Arial,sans-serif" font-size="14" font-weight="bold">IA</text>
+</svg>

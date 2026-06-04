@@ -35,12 +35,17 @@ export function renderDashboard(): void {
     return s + getPrize(latest[g.id]);
   }, 0);
   const onlineCount = Object.keys(latest).filter(k => latest[k]?.concurso).length;
-  console.log('DEBUG dashboard', { totalAccumulated, onlineCount, latestKeys: Object.keys(latest), sample: latest['megasena']?.concurso });
 
   const bestOddsName = [...GAMES].sort((a, b) => (a.odds || Infinity) - (b.odds || Infinity))[0]?.name || '';
   const bestOddsVal = [...GAMES].sort((a, b) => (a.odds || Infinity) - (b.odds || Infinity))[0]?.odds;
   const mostHist = Math.max(...GAMES.map(g => (STATE.history[g.id] || []).length));
   const mostHistName = GAMES.find(g => (STATE.history[g.id] || []).length === mostHist)?.name || '';
+
+  const biggestPrize = GAMES.reduce((best, g) => {
+    const p = getPrize(latest[g.id]);
+    return p > best.val ? { name: g.name, val: p } : best;
+  }, { name: '', val: 0 });
+  const totalEstimated = GAMES.reduce((s, g) => s + getEstimated(latest[g.id]), 0);
 
   const heroHTML = `
     <div class="hero">
@@ -55,10 +60,15 @@ export function renderDashboard(): void {
             ['Modalidades', String(GAMES.length), ''],
             ['Online agora', String(onlineCount), 'green'],
             ['Prox. Sorteio', nextDrawDate(latest), 'gold'],
+            ['Maior Acumulado', biggestPrize.val ? fmt(biggestPrize.val) : '—', 'gold'],
+            ['Total Estimado', fmt(totalEstimated), 'green'],
+            ['Base Historica', totalHist.toLocaleString('pt-BR') + ' conc', ''],
           ].map(s => `<div class="hero-stat"><div class="label">${s[0]}</div><div class="value${s[2] ? ' ' + s[2] : ''}">${s[1]}</div></div>`) : [
             ['Modalidades', String(GAMES.length), ''],
             ['Melhor Chance', bestOddsName, 'green'],
-            ['Base local', String(totalHist), totalHist ? 'green' : ''],
+            ['Chance', bestOddsVal ? '1 em ' + bestOddsVal.toLocaleString('pt-BR') : '—', ''],
+            ['Base Historica', totalHist.toLocaleString('pt-BR') + ' conc', totalHist ? 'green' : ''],
+            ['Mais Dados', mostHistName, ''],
           ].map(s => `<div class="hero-stat"><div class="label">${s[0]}</div><div class="value${s[2] ? ' ' + s[2] : ''}">${s[1]}</div></div>`)}
         </div>
       </div>
@@ -98,8 +108,6 @@ function renderEvolutionCard(g: Game): string {
   const lastDraw = latest?.concurso ? String(latest.concurso) : (hist ? String(hist) : '—');
   const lastDate = latest?.data || '';
   const lastNums: number[] = (latest?.dezenas || []).map(Number).filter((n: number) => !isNaN(n));
-
-  if (g.id === 'megasena') console.log('DEBUG evolutionCard', { g: g.id, hasLatest: !!latest, concurso: latest?.concurso, accumulated, estimated, online: !!latest?.concurso });
 
   const recentDraws = a.hist.slice(-5).reverse();
   const drawDots = recentDraws.slice(0, 5).map(d => {

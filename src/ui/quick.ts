@@ -32,7 +32,6 @@ export function runQuick(): void {
       $('quickOutput')!.innerHTML = `<h3>${g.name} | ${STATE.quick.length} jogos | ${g.price ? fmtMoney(STATE.quick.length * g.price) : 'preco variavel'} | ${(window as any)._simCount.toLocaleString()} simulacoes</h3>${STATE.quick.map((p, i) => renderPickRow(g, p, i)).join('')}`;
     } catch (err) {
       console.warn('Worker error, falling back (quick):', err);
-      prog.done();
       STATE.quick = generateSet(g, count, 'ai', 'standard', 0, (pct) => {
         prog.update(pct);
       });

@@ -21,29 +21,33 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
   const { type, payload } = e.data as { type: string; payload: WorkerPayload };
 
   if (type === 'generate') {
-    const { g, count, strategy, filterMode, seedOffset, hist, simCount } = payload;
+    try {
+      const { g, count, strategy, filterMode, seedOffset, hist, simCount } = payload;
 
-    (self as any)._simCount = simCount;
-    Object.assign(STATE, {
-      analysisCache: {},
-      forests: {},
-      markovCache: {},
-      clusterCache: {},
-      gbForests: {},
-      selected: {},
-      latest: {},
-      generated: [],
-      budget: [],
-      wheel: [],
-      quick: [],
-      favorites: [],
-    });
-    STATE.history[g.id] = hist;
+      (self as any)._simCount = simCount;
+      Object.assign(STATE, {
+        analysisCache: {},
+        forests: {},
+        markovCache: {},
+        clusterCache: {},
+        gbForests: {},
+        selected: {},
+        latest: {},
+        generated: [],
+        budget: [],
+        wheel: [],
+        quick: [],
+        favorites: [],
+      });
+      STATE.history[g.id] = hist;
 
-    const tickets = generateSet(g as any, count, strategy as any, filterMode as any, seedOffset, (pct: number) => {
-      self.postMessage({ type: 'progress', payload: pct });
-    });
+      const tickets = generateSet(g as any, count, strategy as any, filterMode as any, seedOffset, (pct: number) => {
+        self.postMessage({ type: 'progress', payload: pct });
+      });
 
-    self.postMessage({ type: 'result', payload: tickets });
+      self.postMessage({ type: 'result', payload: tickets });
+    } catch (err) {
+      self.postMessage({ type: 'error', payload: (err as Error).message || String(err) });
+    }
   }
 };

@@ -14,6 +14,9 @@ function getWorker(): Worker {
       } else if (type === 'result') {
         if (pendingResolve) pendingResolve(payload);
         cleanup();
+      } else if (type === 'error') {
+        if (pendingReject) pendingReject(new Error(payload));
+        cleanup();
       }
     };
     worker.onerror = (e) => {

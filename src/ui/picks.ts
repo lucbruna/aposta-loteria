@@ -33,7 +33,6 @@ export function renderPicks(): void {
         ${STATE.generated.map((p, i) => renderPickRow(g, p, i)).join('')}`;
     } catch (err) {
       console.warn('Worker error, falling back to direct generation:', err);
-      prog.done();
       STATE.generated = generateSet(g, count, strategy as any, filterMode as any, 0, (pct) => {
         prog.update(pct);
       });

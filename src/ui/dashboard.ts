@@ -70,7 +70,14 @@ export function renderDashboard(): void {
   const evolutionHTML = `
     <h3 style="margin:0 0 8px;font-size:13px;font-weight:600">Painel de Evolucao</h3>
     <div class="evolution-grid">
-      ${GAMES.map(g => { try { return renderEvolutionCard(g); } catch { return ''; } }).join('')}
+      ${[...GAMES].sort((a, b) => {
+        const ap = getPrize(STATE.latest?.[a.id]) || 0;
+        const bp = getPrize(STATE.latest?.[b.id]) || 0;
+        if (ap !== bp) return bp - ap;
+        const ah = (STATE.history[a.id] || []).length;
+        const bh = (STATE.history[b.id] || []).length;
+        return bh - ah;
+      }).map(g => { try { return renderEvolutionCard(g); } catch { return ''; } }).join('')}
     </div>`;
 
   $('kpis')!.innerHTML = heroHTML;
@@ -102,7 +109,7 @@ function allDrawsList(latest: Record<string, any>): string {
   if (!items.length) return '—';
   items.sort((a, b) => new Date(a.date.split('/').reverse().join('-')).getTime() - new Date(b.date.split('/').reverse().join('-')).getTime());
   return items.map(x =>
-    `<span class="draw-pill" style="--pill:${x.game.color}">${x.date}</span>`
+    `<span class="draw-pill" style="--pill:${x.game.color}" title="${x.game.name}">${x.date}</span>`
   ).join('');
 }
 
@@ -114,6 +121,7 @@ function renderEvolutionCard(g: Game): string {
   const estimated = getEstimated(latest);
   const lastDraw = latest?.concurso ? String(latest.concurso) : (hist ? String(hist) : '—');
   const lastDate = latest?.data || '';
+  const nextDate = latest?.dataProximoConcurso || '';
   const lastNums: number[] = (latest?.dezenas || []).map(Number).filter((n: number) => !isNaN(n));
 
   const recentDraws = a.hist.slice(-5).reverse();
@@ -127,7 +135,12 @@ function renderEvolutionCard(g: Game): string {
   const online = !!(latest?.concurso);
   const maxPrize = Math.max(accumulated, estimated, 1);
   const accumPct = online ? Math.min(100, (accumulated / maxPrize) * 100) : Math.min(100, hist * 3);
-  const freqPct = Math.min(100, a.score.slice(0, 5).reduce((s, x) => s + x.score, 0) / (a.score[0]?.score || 1) * 25);
+  const freqArr = a.score.slice(0, 5);
+  const maxFreq = freqArr[0]?.score || 1;
+  const freqPct = Math.min(100, freqArr.reduce((s, x) => s + x.score, 0) / (maxFreq || 1) * 25);
+  const freqBars = freqArr.map(x =>
+    `<div class="freq-row"><span class="freq-num">${String(x.n).padStart(2, '0')}</span><div class="freq-bar-wrap"><div class="freq-bar" style="width:${(x.score / maxFreq) * 100}%"></div></div><span class="freq-val">${x.score.toFixed(1)}</span></div>`
+  ).join('');
 
   return `<div class="evolution-card" style="--accent:${g.color}" onclick="showGame('${g.id}')">
     <div class="evol-head">
@@ -136,7 +149,7 @@ function renderEvolutionCard(g: Game): string {
     </div>
     <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:2px">
       <span>${online ? 'Acumulado' : 'Frequencia media'}</span>
-      <span>${online ? 'Prox: ' + fmt(estimated) : (bestOddsText(g))}</span>
+      <span>${online ? (estimated ? 'Prox: ' + fmt(estimated) : '') : (bestOddsText(g))}</span>
     </div>
     <div class="evol-bar-wrap">
       <div class="evol-bar" style="width:${online ? accumPct : freqPct}%"></div>
@@ -146,8 +159,10 @@ function renderEvolutionCard(g: Game): string {
       <span>${lastDate}</span>
       <span>${hist} registros</span>
     </div>
+    ${nextDate ? `<div style="font-size:10px;color:var(--accent);margin-top:4px;font-weight:600">Proximo: ${nextDate}</div>` : ''}
     ${lastNums.length ? `<div style="display:flex;gap:4px;margin-top:8px;flex-wrap:wrap">${lastNums.slice(0, 6).map(n => `<span class="ball small pick" style="--accent:${g.color};width:22px;height:22px;font-size:9px">${pad(n, g)}</span>`).join('')}</div>` : ''}
     ${hist ? `<div class="evol-dots">${drawDots}${emptyHTML}</div>` : ''}
+    ${freqBars ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--line)"><div style="font-size:9px;color:var(--muted);margin-bottom:4px;font-weight:600">TOP 5 FREQ</div>${freqBars}</div>` : ''}
   </div>`;
 }
 

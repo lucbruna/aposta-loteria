@@ -105,7 +105,7 @@ textarea{width:100%;min-height:160px;resize:vertical;background:var(--panel-2);b
 .evolution-card:hover{border-color:color-mix(in srgb,var(--accent) 35%,var(--line))}
 .evol-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .evol-name{font-weight:700;font-size:13px;color:var(--accent)}
-.evol-prize{font-size:14px;font-weight:800;color:var(--green)}
+.evol-prize{font-size:14px;font-weight:800;color:var(--green);text-shadow:0 0 20px color-mix(in srgb,var(--green) 30%,transparent)}
 .evol-bar-wrap{height:4px;background:var(--panel-2);border-radius:99px;margin:8px 0;overflow:hidden}
 .evol-bar{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 50%,#fff));transition:width .6s cubic-bezier(.4,0,.2,1)}
 .evol-info{display:flex;justify-content:space-between;font-size:10px;color:var(--muted)}
@@ -113,6 +113,11 @@ textarea{width:100%;min-height:160px;resize:vertical;background:var(--panel-2);b
 .evol-dots{display:flex;gap:3px;margin-top:8px;flex-wrap:wrap}
 .evol-dot{width:20px;height:20px;border-radius:50%;font-size:8px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);background:var(--panel-2)}
 .evol-dot.hit{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.freq-row{display:flex;align-items:center;gap:4px;margin-bottom:2px}
+.freq-num{font-size:9px;font-weight:700;color:var(--accent);width:18px;text-align:right}
+.freq-bar-wrap{flex:1;height:6px;background:var(--panel-2);border-radius:99px;overflow:hidden}
+.freq-bar{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 40%,#fff));transition:width .6s}
+.freq-val{font-size:8px;color:var(--muted);width:22px;text-align:right}
 
 @media(max-width:940px){
   .app{grid-template-columns:1fr}

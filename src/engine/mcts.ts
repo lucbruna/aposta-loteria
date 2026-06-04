@@ -4,7 +4,7 @@ import { enhancedFit } from './score';
 import { analyze } from './analyze';
 import { range, todaySeed, hash, mulberry } from '../utils';
 
-export function mctsTicket(g: Game, index: number, avoid: number[][]): number[] {
+export function mctsTicket(g: Game, index: number, avoid: number[][], onProgress?: (pct: number) => void): number[] {
   const a = analyze(g);
   const pool = range(g);
   const its = 500;
@@ -63,8 +63,10 @@ export function mctsTicket(g: Game, index: number, avoid: number[][]): number[] 
 
     const score = enhancedFit(g, ticket, a, avoid, index, iter);
     for (const nd of path) { nd.n++; nd.w += score / 100; }
+    if (onProgress && iter % 50 === 0) onProgress(Math.round((iter / its) * 100));
   }
 
+  if (onProgress) onProgress(100);
   const bestChild = root.children
     ? root.children.reduce((a, b) => (a.w / a.n > b.w / b.n ? a : b))
     : null;

@@ -45,7 +45,7 @@ function avgDistanceFn(pick: number[], sets: number[][]): number {
   return distances.reduce((a, b) => a + b, 0) / Math.max(distances.length, 1);
 }
 
-export function geneticTicket(g: Game, index: number, avoid: number[][]): number[] {
+export function geneticTicket(g: Game, index: number, avoid: number[][], onProgress?: (pct: number) => void): number[] {
   const a = analyze(g);
   const ps = cfg(g, 'pop');
   const el = g.engine?.elite || 6;
@@ -57,6 +57,9 @@ export function geneticTicket(g: Game, index: number, avoid: number[][]): number
     const t = buildGame(g, 'balanced', index * ps + i, avoid);
     pop.push({ ticket: t, fitness: enhancedFit(g, t, a, avoid, index, i) });
   }
+
+  const totalWork = ps + gs * ps; // initial pop + generations
+  let done = ps;
 
   for (let gen = 0; gen < gs; gen++) {
     pop.sort((x, y) => y.fitness - x.fitness);
@@ -85,10 +88,13 @@ export function geneticTicket(g: Game, index: number, avoid: number[][]): number
           np.push({ ticket: mut, fitness: enhancedFit(g, mut, a, avoid, index, gen) });
         }
       }
+      done++;
     }
     pop = np;
+    if (onProgress) onProgress(Math.round((done / totalWork) * 100));
   }
 
+  if (onProgress) onProgress(100);
   pop.sort((x, y) => y.fitness - x.fitness);
   return pop[0].ticket;
 }

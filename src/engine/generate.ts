@@ -10,13 +10,13 @@ import { mlBuildForest } from './ml';
 import { extrasFor } from './extras';
 import { STATE } from '../state';
 
-export function buildGame(g: Game, strategy: Strategy = 'balanced', index: number = 0, avoid: number[][] = []): number[] {
+export function buildGame(g: Game, strategy: Strategy = 'balanced', index: number = 0, avoid: number[][] = [], onProgress?: (pct: number) => void): number[] {
   if (g.federal) return [Math.floor(mulberry(todaySeed() + index + hash(g.id))() * 100000)];
   if (g.columns) {
     const rng = mulberry(todaySeed() + hash(g.id + strategy) + index * 7919);
     return Array.from({ length: g.columns }, () => Math.floor(rng() * 10));
   }
-  if (strategy === 'ai') return aiTicket(g, index, avoid);
+  if (strategy === 'ai') return aiTicket(g, index, avoid, onProgress);
 
   const a = analyze(g);
   const rng = mulberry(todaySeed() + hash(g.id + strategy) + index * 7919);
@@ -35,23 +35,29 @@ export function buildGame(g: Game, strategy: Strategy = 'balanced', index: numbe
   return pick;
 }
 
-export function aiTicket(g: Game, index: number = 0, avoid: number[][] = []): number[] {
+export function aiTicket(g: Game, index: number = 0, avoid: number[][] = [], onProgress?: (pct: number) => void): number[] {
   const a = analyze(g);
   if (!STATE.forests) STATE.forests = {};
   if (!STATE.forests[g.id]) STATE.forests[g.id] = mlBuildForest(g, a.hist, 15);
 
   const simCount = (window as any)._simCount || cfg(g, 'sims');
-  const mc = mcTickets(g, index, avoid, Math.min(simCount, 6000));
-  const ga = geneticTicket(g, index, avoid);
-  const mcts = mctsTicket(g, index, avoid);
+
+  const subProgress = (start: number, end: number) => {
+    return (subPct: number) => { if (onProgress) onProgress(start + (end - start) * subPct / 100); };
+  };
+
+  const mc = mcTickets(g, index, avoid, Math.min(simCount, 6000), subProgress(0, 30));
+  const ga = geneticTicket(g, index, avoid, subProgress(30, 70));
+  const mcts = mctsTicket(g, index, avoid, subProgress(70, 80));
 
   const all = [...mc, ga, mcts];
   let best: number[] | null = null;
   let bestFit = -Infinity;
 
-  for (const c of all) {
-    const fit = enhancedFit(g, c, a, avoid, index, 0);
-    if (!best || fit > bestFit) { best = c; bestFit = fit; }
+  for (let ci = 0; ci < all.length; ci++) {
+    const fit = enhancedFit(g, all[ci], a, avoid, index, 0);
+    if (!best || fit > bestFit) { best = all[ci]; bestFit = fit; }
+    if (onProgress) onProgress(80 + Math.round((ci + 1) / all.length * 20));
   }
   return best!;
 }
@@ -69,7 +75,13 @@ export function generateSet(
   const maxAttempts = count * 12;
 
   for (let i = 0; out.length < count && guard < maxAttempts; guard++, i++) {
-    const main = buildGame(g, strategy, i + seedOffset, out.map(x => x.main));
+    const ticketProgress = strategy === 'ai' && onProgress
+      ? (subPct: number) => {
+          const overall = (out.length + subPct / 100) / count * 100;
+          onProgress(Math.round(Math.min(99, overall)));
+        }
+      : undefined;
+    const main = buildGame(g, strategy, i + seedOffset, out.map(x => x.main), ticketProgress);
     if (!passesFilters(g, main, filterMode) && guard < count * 10) continue;
     out.push({
       main,
@@ -77,7 +89,7 @@ export function generateSet(
       score: scoreTicket(g, main),
       ai: aiReport(g, main),
     });
-    if (onProgress) onProgress(Math.round((out.length / count) * 100));
+    if (onProgress && strategy !== 'ai') onProgress(Math.round((out.length / count) * 100));
   }
 
   if (onProgress) onProgress(100);

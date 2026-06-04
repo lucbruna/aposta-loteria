@@ -13,7 +13,7 @@ import { renderBacktest, runBacktest, runAutoTune } from './backtest';
 import { runBudget } from './budget';
 import { runWheel, renderWheel } from './wheel';
 import { renderImportStatus, importHistory, loadHistoryFile, clearHistory } from '../history/parser';
-import { checkApi } from '../api';
+
 
 (window as any).showView = showView;
 (window as any).showGame = showGame;
@@ -174,7 +174,6 @@ export function init(): void {
   updateStatus();
   tryFetchLatest();
   autoImportCSV();
-  checkApiStatus();
 }
 
 function renderNav(): void {
@@ -192,16 +191,6 @@ function fillSelects(): void {
 function updateStatus(): void {
   const total = GAMES.reduce((s, g) => s + (STATE.history[g.id] || []).length, 0);
   $('dataBadge')!.textContent = total ? `${total} concursos locais` : 'Base local';
-}
-
-async function checkApiStatus(): Promise<void> {
-  const ok = await checkApi();
-  const badge = document.createElement('span');
-  badge.className = 'pill';
-  badge.style.cssText = `background:${ok ? 'rgba(45,212,191,0.2)' : 'rgba(251,113,133,0.2)'};color:${ok ? 'var(--green)' : 'var(--red)'}`;
-  badge.textContent = ok ? 'API online' : 'API off';
-  const actions = document.querySelector('.top-actions');
-  if (actions) actions.appendChild(badge);
 }
 
 async function autoImportCSV(): Promise<void> {

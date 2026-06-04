@@ -1,4 +1,4 @@
-import type { Game, AnalysisResult } from '../types';
+import type { Game, AnalysisResult, LatestData } from '../types';
 import { GAMES } from '../config';
 import { STATE } from '../state';
 import { analyze } from '../engine/analyze';
@@ -18,12 +18,12 @@ function pad(n: number, g: Game): string {
   return String(n).padStart(g.max > 99 ? 5 : 2, '0');
 }
 
-function getPrize(d: any): number {
+function getPrize(d: LatestData | undefined): number {
   if (!d) return 0;
   return d.valorAcumuladoProximoConcurso || d.valorAcumulado || d.acumulado || d.valorPremio || d.premio || 0;
 }
 
-function getEstimated(d: any): number {
+function getEstimated(d: LatestData | undefined): number {
   if (!d) return 0;
   return d.valorEstimadoProximoConcurso || d.estimativa || d.estimado || d.valorEstimado || 0;
 }
@@ -86,7 +86,7 @@ export function renderDashboard(): void {
   animateValue('heroAccumulated', totalAccumulated);
 }
 
-function nextDrawDate(latest: Record<string, any>): string {
+function nextDrawDate(latest: Record<string, LatestData>): string {
   const dates = GAMES.map(g => {
     const d = latest[g.id];
     if (d?.dataProximoConcurso) return { game: g.name, date: d.dataProximoConcurso };
@@ -99,7 +99,7 @@ function nextDrawDate(latest: Record<string, any>): string {
   return `${dates[0].date} (${dates[0].game})`;
 }
 
-function allDrawsList(latest: Record<string, any>): string {
+function allDrawsList(latest: Record<string, LatestData>): string {
   const items = GAMES.map(g => {
     const d = latest[g.id];
     const date = d?.dataProximoConcurso || d?.data || '';

@@ -15,7 +15,7 @@ type WorkerPayload = {
 
 type WorkerMessage = { type: string; payload: any };
 
-const G = (self as any).GAMES || GAMES;
+const G = GAMES;
 
 self.onmessage = (e: MessageEvent<WorkerMessage>) => {
   const { type, payload } = e.data as { type: string; payload: WorkerPayload };
@@ -24,7 +24,7 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
     try {
       const { g, count, strategy, filterMode, seedOffset, hist, simCount } = payload;
 
-      (self as any)._simCount = simCount;
+      STATE._simCount = simCount;
       Object.assign(STATE, {
         analysisCache: {},
         forests: {},

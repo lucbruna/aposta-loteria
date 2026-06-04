@@ -52,7 +52,7 @@ export function analyze(g: Game): AnalysisResult {
   const cold = [...score].sort((a, b) => a.freq - b.freq || b.gap - a.gap).slice(0, Math.max(5, Math.ceil(nums.length * 0.18))).map(x => x.n);
   const weights = new Map(score.map(x => [x.n, x.score]));
 
-  const result: AnalysisResult = { hist, total, score, freq, pair, pairPower, profile, top, cold, weights, mean, sd };
+  const result: AnalysisResult = { hist, total, score, freq, pair, pairPower, profile, top, cold, weights, mean, sd, lastSeen };
   STATE.analysisCache[g.id] = { sig, data: result };
   saveAnalysisCache();
   return result;
@@ -101,6 +101,7 @@ export function onlineUpdate(g: Game, newDraws: DrawRow[]): void {
   if (prevLen < 0) return;
   const a = STATE.analysisCache[g.id]?.data;
   if (!a) return;
+  if (!a.lastSeen) a.lastSeen = new Map(range(g).map(n => [n, -1]));
 
   newDraws.forEach((draw, di) => {
     const idx = prevLen + di;

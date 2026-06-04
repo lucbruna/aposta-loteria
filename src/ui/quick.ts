@@ -15,7 +15,7 @@ export function runQuick(): void {
   const g = GAMES.find(x => x.id === ($('quickGame') as HTMLSelectElement).value) || GAMES[0];
   const budget = Math.max(0, Number(($('quickBudget') as HTMLInputElement).value) || 0);
   const count = g.price ? Math.max(1, Math.min(80, Math.floor(budget / g.price))) : 5;
-  (window as any)._simCount = parseInt(($('quickSim') as HTMLSelectElement).value) || 3000;
+  STATE._simCount = parseInt(($('quickSim') as HTMLSelectElement).value) || 3000;
 
   $('quickOutput')!.innerHTML = `<p class="analysis">Gerando ${count} jogos...</p>`;
 
@@ -24,19 +24,19 @@ export function runQuick(): void {
     const hist = STATE.history[g.id] || [];
 
     try {
-      const tickets = await generateWithWorker(g, count, 'ai', 'standard', 0, hist, (window as any)._simCount, (pct) => {
+      const tickets = await generateWithWorker(g, count, 'ai', 'standard', 0, hist, STATE._simCount!, (pct) => {
         prog.update(pct);
       });
       STATE.quick = tickets;
       prog.done();
-      $('quickOutput')!.innerHTML = `<h3>${g.name} | ${STATE.quick.length} jogos | ${g.price ? fmtMoney(STATE.quick.length * g.price) : 'preco variavel'} | ${(window as any)._simCount.toLocaleString()} simulacoes</h3>${STATE.quick.map((p, i) => renderPickRow(g, p, i)).join('')}`;
+      $('quickOutput')!.innerHTML = `<h3>${g.name} | ${STATE.quick.length} jogos | ${g.price ? fmtMoney(STATE.quick.length * g.price) : 'preco variavel'} | ${STATE._simCount!.toLocaleString()} simulacoes</h3>${STATE.quick.map((p, i) => renderPickRow(g, p, i)).join('')}`;
     } catch (err) {
       console.warn('Worker error, falling back (quick):', err);
       STATE.quick = generateSet(g, count, 'ai', 'standard', 0, (pct) => {
         prog.update(pct);
       });
       prog.done();
-      $('quickOutput')!.innerHTML = `<h3>${g.name} | ${STATE.quick.length} jogos | ${g.price ? fmtMoney(STATE.quick.length * g.price) : 'preco variavel'} | ${(window as any)._simCount.toLocaleString()} simulacoes</h3>${STATE.quick.map((p, i) => renderPickRow(g, p, i)).join('')}`;
+      $('quickOutput')!.innerHTML = `<h3>${g.name} | ${STATE.quick.length} jogos | ${g.price ? fmtMoney(STATE.quick.length * g.price) : 'preco variavel'} | ${STATE._simCount!.toLocaleString()} simulacoes</h3>${STATE.quick.map((p, i) => renderPickRow(g, p, i)).join('')}`;
     }
   }, 50);
 }

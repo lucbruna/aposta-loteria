@@ -216,7 +216,7 @@ async function autoImportCSV(): Promise<void> {
         if (rows.length >= 25) {
           STATE.history[f.id] = rows;
           delete STATE.analysisCache[f.id];
-          const { saveHistory } = await import('../utils');
+          const { saveHistory } = await import('../state');
           saveHistory(f.id);
           imported++;
           break;

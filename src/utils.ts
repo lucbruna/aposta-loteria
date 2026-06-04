@@ -1,4 +1,5 @@
 import type { Game } from './types';
+import { ENGINE } from './config';
 
 export function $(id: string): HTMLElement {
   return document.getElementById(id)!;
@@ -25,7 +26,7 @@ export function comb(n: number, k: number): number {
 }
 
 export function cfg(g: Game, k: keyof NonNullable<typeof g.engine>): number {
-  return (g.engine && g.engine[k] !== undefined ? g.engine[k] : (window as any).ENGINE[k]) as number;
+  return (g.engine && g.engine[k] !== undefined ? g.engine[k] : ENGINE[k]) as number;
 }
 
 export function chance(g: Game): number {
@@ -71,22 +72,6 @@ export function sample(
     out.push(bag.splice(idx < 0 ? bag.length - 1 : idx, 1)[0].n);
   }
   return out.sort((a, b) => a - b);
-}
-
-export function saveHistory(id: string): void {
-  localStorage.setItem('hist_' + id, JSON.stringify((window as any).STATE.history[id] || []));
-}
-
-export function loadHistory(id: string): any[] {
-  try { return JSON.parse(localStorage.getItem('hist_' + id) || '[]'); } catch { return []; }
-}
-
-export function loadFavorites(): any[] {
-  try { return JSON.parse(localStorage.getItem('favorite_wallets') || '[]'); } catch { return []; }
-}
-
-export function saveFavorites(): void {
-  localStorage.setItem('favorite_wallets', JSON.stringify((window as any).STATE.favorites.slice(0, 40)));
 }
 
 export function hitCount(a: number[], b: number[]): number {

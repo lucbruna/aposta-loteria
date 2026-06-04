@@ -186,7 +186,7 @@ export function portfolioReport(g: Game, set: any[]): string {
   const overlap = calcOverlap(g, set);
   const diversification = calcDiversification(g, set);
   const clusterSpread = calcClusterSpread(g, set);
-  const sims = (window as any)._simCount || ENGINE.sims;
+  const sims = STATE._simCount || ENGINE.sims;
   const hasRF = !!STATE.forests?.[g.id];
   const hasGB = !!STATE.gbForests?.[g.id];
   const hasMarkov = !!STATE.markovCache?.[g.id];

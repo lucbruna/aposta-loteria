@@ -15,7 +15,7 @@ export function runBacktest(): void {
   const original = [...(STATE.history[g.id] || [])];
   const limit = Math.max(20, Math.min(Number(($('backtestDraws') as HTMLInputElement).value) || 80, original.length));
   const tickets = Math.max(1, Math.min(10, Number(($('backtestTickets') as HTMLInputElement).value) || 3));
-  (window as any)._simCount = parseInt(($('backtestSim') as HTMLSelectElement).value) || 1000;
+  STATE._simCount = parseInt(($('backtestSim') as HTMLSelectElement).value) || 1000;
 
   if (g.federal || g.columns || original.length < 25) {
     $('backtestOutput')!.innerHTML = `<h3>${g.name}</h3><p class="analysis">Backtest exige pelo menos 25 concursos.</p>`;

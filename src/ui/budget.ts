@@ -18,7 +18,7 @@ export function runBudget(): void {
     return;
   }
 
-  (window as any)._simCount = parseInt(($('budgetSim') as HTMLSelectElement).value) || cfg(g, 'sims');
+  STATE._simCount = parseInt(($('budgetSim') as HTMLSelectElement).value) || cfg(g, 'sims');
   const count = Math.max(1, Math.min(300, Math.floor(budget / price)));
   const odds = g.odds || comb(g.max - g.min + 1, g.pick);
   const edge = 0.05;

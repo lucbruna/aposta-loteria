@@ -3,12 +3,12 @@ import { analyze } from './analyze';
 import { enhancedFit, scoreTicket, aiReport } from './score';
 import { passesFilters } from './filters';
 import { sample, todaySeed, hash, mulberry, range, cfg } from '../utils';
+import { STATE } from '../state';
 import { mcTickets } from './montecarlo';
 import { geneticTicket } from './genetic';
 import { mctsTicket } from './mcts';
 import { mlBuildForest } from './ml';
 import { extrasFor } from './extras';
-import { STATE } from '../state';
 
 export function buildGame(g: Game, strategy: Strategy = 'balanced', index: number = 0, avoid: number[][] = [], onProgress?: (pct: number) => void): number[] {
   if (g.federal) return [Math.floor(mulberry(todaySeed() + index + hash(g.id))() * 100000)];
@@ -40,7 +40,7 @@ export function aiTicket(g: Game, index: number = 0, avoid: number[][] = [], onP
   if (!STATE.forests) STATE.forests = {};
   if (!STATE.forests[g.id]) STATE.forests[g.id] = mlBuildForest(g, a.hist, 15);
 
-  const simCount = (window as any)._simCount || cfg(g, 'sims');
+  const simCount = STATE._simCount || cfg(g, 'sims');
 
   const subProgress = (start: number, end: number) => {
     return (subPct: number) => { if (onProgress) onProgress(start + (end - start) * subPct / 100); };

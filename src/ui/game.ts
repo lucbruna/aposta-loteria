@@ -1,4 +1,5 @@
 import type { Game, AnalysisResult } from '../types';
+import { STATE } from '../state';
 import { scoreTicket, aiReport, ensembleScore } from '../engine/score';
 import { $, fmtNum } from '../utils';
 
@@ -17,7 +18,7 @@ export function suggestionText(g: Game, a: AnalysisResult, sel: number[]): strin
 export function advancedInsight(g: Game, pick: number[]): string {
   if (g.federal || g.columns) return '<strong>IA:</strong> modalidade aleatoria controlada.';
   const r = aiReport(g, pick);
-  const forest = (window as any).STATE?.forests?.[g.id];
+  const forest = STATE.forests?.[g.id];
   const ensemble = forest ? ensembleScore(g, pick, forest) : null;
   return `<strong>IA Next-Gen:</strong> ${r.grade}. Perfil ${r.profile}/100, Pares ${r.pair}/100, Entropia ${r.entropy}/100${ensemble !== null ? `, Ensemble ML: ${ensemble}/99` : ''}. ${r.risk}.`;
 }

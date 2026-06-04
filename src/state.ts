@@ -1,27 +1,29 @@
-import type { DrawRow } from './types';
+import type { AnalysisResult, LatestData, Ticket, WalletFavorite, MLTree } from './types';
 import { GAMES } from './config';
+import type { GBTree } from './engine/ml';
 import type { MarkovChain } from './engine/markov';
 import type { ClusterResult } from './engine/cluster';
-import type { MLTree } from './types';
 
-export const STATE: {
+export interface GlobalState {
   view: string;
   game: string;
   selected: Record<string, number[]>;
-  history: Record<string, DrawRow[]>;
-  latest: Record<string, any>;
-  generated: any[];
-  budget: any[];
-  wheel: any[];
-  quick: any[];
-  favorites: any[];
-  analysisCache: Record<string, { sig: string; data: any }>;
+  history: Record<string, import('./types').DrawRow[]>;
+  latest: Record<string, LatestData>;
+  generated: Ticket[];
+  budget: Ticket[];
+  wheel: Ticket[];
+  quick: Ticket[];
+  favorites: WalletFavorite[];
+  analysisCache: Record<string, { sig: string; data: AnalysisResult }>;
   forests?: Record<string, MLTree[] | null>;
   markovCache?: Record<string, MarkovChain | null>;
   clusterCache?: Record<string, ClusterResult | null>;
-  gbForests?: Record<string, any[] | null>;
+  gbForests?: Record<string, GBTree[] | null>;
   _simCount?: number;
-} = {
+}
+
+export const STATE: GlobalState = {
   view: 'dashboard',
   game: 'megasena',
   selected: {},
@@ -61,7 +63,7 @@ try {
 
 export function saveAnalysisCache(): void {
   try {
-    const c: Record<string, { sig: string; data: any }> = {};
+    const c: Record<string, { sig: string; data: AnalysisResult }> = {};
     for (const [k, v] of Object.entries(STATE.analysisCache)) {
       c[k] = { sig: v.sig, data: v.data };
     }
@@ -89,6 +91,6 @@ export function saveFavorites(): void {
   localStorage.setItem('favorite_wallets', JSON.stringify(STATE.favorites.slice(0, 40)));
 }
 
-function loadHistory(id: string): DrawRow[] {
+function loadHistory(id: string): import('./types').DrawRow[] {
   try { return JSON.parse(localStorage.getItem('hist_' + id) || '[]'); } catch { return []; }
 }

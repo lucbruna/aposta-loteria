@@ -1,3 +1,5 @@
+import type { DrawRow, Ticket } from './types';
+
 const API_BASE = 'http://localhost:3001/api';
 let apiAvailable: boolean | null = null;
 
@@ -17,14 +19,14 @@ export function getApiUrl(path: string): string {
   return `${API_BASE}${path}`;
 }
 
-export async function fetchGames(): Promise<any[]> {
+export async function fetchGames(): Promise<Record<string, unknown>[]> {
   if (!(await checkApi())) return [];
   const r = await fetch(getApiUrl('/games'));
   if (!r.ok) return [];
   return r.json();
 }
 
-export async function fetchHistory(gameId: string): Promise<any[] | null> {
+export async function fetchHistory(gameId: string): Promise<DrawRow[] | null> {
   if (!(await checkApi())) return null;
   try {
     const r = await fetch(getApiUrl(`/history/${gameId}`));
@@ -33,7 +35,7 @@ export async function fetchHistory(gameId: string): Promise<any[] | null> {
   } catch { return null; }
 }
 
-export async function pushHistory(gameId: string, draws: any[]): Promise<boolean> {
+export async function pushHistory(gameId: string, draws: DrawRow[]): Promise<boolean> {
   if (!(await checkApi())) return false;
   try {
     const r = await fetch(getApiUrl(`/history/${gameId}`), {
@@ -50,12 +52,12 @@ export async function fetchHistoryCount(gameId: string): Promise<number> {
   try {
     const r = await fetch(getApiUrl(`/history/${gameId}/count`));
     if (!r.ok) return 0;
-    const data = await r.json();
+    const data = await r.json() as { count: number };
     return data.count;
   } catch { return 0; }
 }
 
-export async function fetchFavorites(): Promise<any[]> {
+export async function fetchFavorites(): Promise<Record<string, unknown>[]> {
   if (!(await checkApi())) return [];
   try {
     const r = await fetch(getApiUrl('/favorites'));
@@ -64,7 +66,7 @@ export async function fetchFavorites(): Promise<any[]> {
   } catch { return []; }
 }
 
-export async function pushFavorite(gameId: string, label: string, tickets: any[]): Promise<boolean> {
+export async function pushFavorite(gameId: string, label: string, tickets: Ticket[]): Promise<boolean> {
   if (!(await checkApi())) return false;
   try {
     const r = await fetch(getApiUrl('/favorites'), {
@@ -92,7 +94,7 @@ export async function clearFavoritesApi(): Promise<boolean> {
   } catch { return false; }
 }
 
-export async function pushBacktestResult(gameId: string, params: any, results: any): Promise<boolean> {
+export async function pushBacktestResult(gameId: string, params: Record<string, unknown>, results: Record<string, unknown>): Promise<boolean> {
   if (!(await checkApi())) return false;
   try {
     const r = await fetch(getApiUrl('/backtest'), {

@@ -73,6 +73,7 @@ export interface AnalysisResult {
   weights: Map<number, number>;
   mean: number;
   sd: number;
+  lastSeen: Map<number, number>;
 }
 
 export interface AIReply {
@@ -141,12 +142,36 @@ export interface MLTree {
   r?: MLTree;
 }
 
+export interface LatestData {
+  concurso?: number;
+  data?: string;
+  dataProximoConcurso?: string;
+  dezenas?: string[];
+  listaDezenas?: string[];
+  valorAcumuladoProximoConcurso?: number;
+  valorAcumulado?: number;
+  acumulado?: number;
+  valorPremio?: number;
+  premio?: number;
+  valorEstimadoProximoConcurso?: number;
+  estimativa?: number;
+  estimado?: number;
+  valorEstimado?: number;
+  premiacoes?: Array<{ faixa: number; descricao: string; ganhadores: number; valorPremio: number }>;
+  local?: string;
+  cidades?: string[];
+  trevos?: number[];
+  mesSorte?: number;
+  timeCoracao?: number;
+  [key: string]: unknown;
+}
+
 export interface AppState {
   view: string;
   game: string;
   selected: Record<string, number[]>;
   history: Record<string, DrawRow[]>;
-  latest: Record<string, any>;
+  latest: Record<string, LatestData>;
   generated: Ticket[];
   budget: Ticket[];
   wheel: Ticket[];
@@ -158,12 +183,12 @@ export interface AppState {
 
 export interface WorkerRequest {
   type: 'generate' | 'analyze' | 'backtest' | 'autotune';
-  payload: any;
+  payload: unknown;
 }
 
 export interface WorkerResponse {
   type: string;
-  payload: any;
+  payload: unknown;
 }
 
 export const PRIME_SEEDS = {

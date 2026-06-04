@@ -13,22 +13,22 @@ export function renderPicks(): void {
   const count = Math.max(1, Math.min(50, Number(($('bulkCount') as HTMLInputElement).value) || 10));
   const strategy = ($('strategy') as HTMLSelectElement).value;
   const filterMode = ($('filterMode') as HTMLSelectElement).value;
-  (window as any)._simCount = parseInt(($('simDepth') as HTMLSelectElement).value) || 3000;
+  STATE._simCount = parseInt(($('simDepth') as HTMLSelectElement).value) || 3000;
 
   $('picksOutput')!.innerHTML = `<h3>${g.name}</h3><p class="analysis">Gerando ${count} jogos com estrategia <strong>${strategy}</strong>...</p>`;
 
   setTimeout(async () => {
-    const prog = showProgress('picksOutput', `Gerando ${count} jogos (${(window as any)._simCount.toLocaleString()} simulacoes)`);
+    const prog = showProgress('picksOutput', `Gerando ${count} jogos (${STATE._simCount!.toLocaleString()} simulacoes)`);
     const hist = STATE.history[g.id] || [];
 
     try {
-      const tickets = await generateWithWorker(g, count, strategy, filterMode, 0, hist, (window as any)._simCount, (pct) => {
+      const tickets = await generateWithWorker(g, count, strategy, filterMode, 0, hist, STATE._simCount!, (pct) => {
         prog.update(pct);
       });
       STATE.generated = tickets;
       prog.done();
       $('picksOutput')!.style.setProperty('--accent', g.color);
-      $('picksOutput')!.innerHTML = `<h3>${g.name} | ${STATE.generated.length} jogos | ${strategy} | ${(window as any)._simCount.toLocaleString()} simulacoes</h3>
+      $('picksOutput')!.innerHTML = `<h3>${g.name} | ${STATE.generated.length} jogos | ${strategy} | ${STATE._simCount!.toLocaleString()} simulacoes</h3>
         <p class="analysis">${portfolioReport(g, STATE.generated)}</p>
         ${STATE.generated.map((p, i) => renderPickRow(g, p, i)).join('')}`;
     } catch (err) {
@@ -38,7 +38,7 @@ export function renderPicks(): void {
       });
       prog.done();
       $('picksOutput')!.style.setProperty('--accent', g.color);
-      $('picksOutput')!.innerHTML = `<h3>${g.name} | ${STATE.generated.length} jogos | ${strategy} | ${(window as any)._simCount.toLocaleString()} simulacoes</h3>
+      $('picksOutput')!.innerHTML = `<h3>${g.name} | ${STATE.generated.length} jogos | ${strategy} | ${STATE._simCount!.toLocaleString()} simulacoes</h3>
         <p class="analysis">${portfolioReport(g, STATE.generated)}</p>
         ${STATE.generated.map((p, i) => renderPickRow(g, p, i)).join('')}`;
     }

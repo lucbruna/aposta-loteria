@@ -37,6 +37,7 @@
       </div>
       <div class="top-actions">
         <span class="pill" id="dataBadge">Base local</span>
+        <button class="btn" id="logBtn" style="display:none" onclick="showLogs()">⚠ <span id="logCount">0</span></button>
         <button class="btn" onclick="toggleTheme()">Tema</button>
       </div>
     </header>
@@ -142,6 +143,7 @@
   </main>
 </div>
 <script src="data-embed.js"></script>
-<script>if(location.protocol==='file:'){document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#071018;color:#e2e8f0;flex-direction:column;gap:16px;text-align:center;padding:24px;font-family:Arial"><h1 style="font-size:24px;margin:0">Loterias Brasil IA</h1><p style="color:#94a3b8;max-width:400px;line-height:1.5">A versão moderna requer um servidor de desenvolvimento.<br><br>Execute no terminal:<br><code style="background:#0f172a;color:#38bdf8;padding:10px 20px;border-radius:6px;display:inline-block;margin-top:8px;font-size:16px">npm run dev</code><br><br>Depois abra <strong>http://localhost:5173</strong><br><br><a href="loteria_federal_brasil_ia.html" style="color:#38bdf8">Ir para versão clássica (offline)</a></p></div>'}else{var s=document.createElement('script');s.type='module';s.src='/src/main.ts';document.body.appendChild(s)}</script>
+<script type="module" src="/src/main.ts"></script>
+<script nomodule>document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#071018;color:#e2e8f0;flex-direction:column;gap:16px;text-align:center;padding:24px;font-family:Arial"><h1 style="font-size:24px;margin:0">Loterias Brasil IA</h1><p style="color:#94a3b8;max-width:400px;line-height:1.5">A versão moderna requer um servidor de desenvolvimento.<br><br>Execute no terminal:<br><code style="background:#0f172a;color:#38bdf8;padding:10px 20px;border-radius:6px;display:inline-block;margin-top:8px;font-size:16px">npm run dev</code><br><br>Depois abra <strong>http://localhost:5173</strong><br><br><a href="loteria_federal_brasil_ia.html" style="color:#38bdf8">Ir para versão clássica (offline)</a></p></div>'</script>
 </body>
 </html>

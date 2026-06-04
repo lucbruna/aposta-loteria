@@ -9,6 +9,7 @@ import { renderNumberGrid, renderMetrics, renderPickRow, suggestionText } from '
 import { advancedInsight } from './game';
 import { renderFreqChart, renderPairHeatmap } from './charts';
 import { on } from '../events';
+import { captureError } from '../logger';
 
 let _subscribed = false;
 
@@ -87,7 +88,7 @@ export function renderDashboard(): void {
         const ah = (STATE.history[a.id] || []).length;
         const bh = (STATE.history[b.id] || []).length;
         return bh - ah;
-      }).map(g => { try { return renderEvolutionCard(g); } catch { return ''; } }).join('')}
+      }).map(g => { try { return renderEvolutionCard(g); } catch (e) { captureError('dashboard:evol-card', e); return ''; } }).join('')}
     </div>`;
 
   $('kpis')!.innerHTML = heroHTML;

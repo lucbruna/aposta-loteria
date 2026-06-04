@@ -18,7 +18,7 @@ export default defineConfig({
       },
       output: {
         manualChunks(id: string) {
-          if (id.includes('chart.js') || id.includes('chartjs-')) return 'charts';
+          if (id.includes('uplot')) return 'charts';
           if (id.includes('idb-keyval')) return 'vendor';
           if (id.includes('node_modules')) return 'vendor';
         },

@@ -2,6 +2,7 @@ import type { Game, DrawRow } from '../types';
 import { GAMES } from '../config';
 import { generateSet } from '../engine/generate';
 import { STATE } from '../state';
+import { captureError } from '../logger';
 
 type WorkerPayload = {
   g: Game;
@@ -47,6 +48,7 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
 
       self.postMessage({ type: 'result', payload: tickets });
     } catch (err) {
+      captureError('worker:generate', err);
       self.postMessage({ type: 'error', payload: (err as Error).message || String(err) });
     }
   }

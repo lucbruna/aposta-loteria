@@ -1,4 +1,5 @@
 import type { Game, Ticket, DrawRow } from '../types';
+import { captureError } from '../logger';
 
 let worker: Worker | null = null;
 let pendingResolve: ((value: Ticket[]) => void) | null = null;
@@ -20,6 +21,7 @@ function getWorker(): Worker {
       }
     };
     worker.onerror = (e) => {
+      captureError('worker:onerror', e);
       if (pendingReject) pendingReject(e);
       cleanup();
     };
@@ -60,7 +62,8 @@ export function generateWithWorker(
         type: 'generate',
         payload: { g, count, strategy, filterMode, seedOffset, hist, simCount },
       });
-    } catch (err) {
+      } catch (err) {
+      captureError('worker:post', err);
       reject(err);
       cleanup();
     }

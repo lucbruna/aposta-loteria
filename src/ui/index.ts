@@ -5,7 +5,8 @@ import { analyze } from '../engine/analyze';
 import { buildGame, generateSet } from '../engine/generate';
 import { scoreTicket, aiReport, portfolioReport, ensembleScore } from '../engine/score';
 import { comb, $, fmtMoney, fmtNum, cfg, copyText } from '../utils';
-import { emit } from '../events';
+import { emit, on } from '../events';
+import { captureError, captureWarn, getLogs, clearLogs } from '../logger';
 import { renderDashboard, renderGame } from './dashboard';
 import { renderPicks } from './picks';
 import { renderFavorites, saveWallet, copyFavorite, deleteFavorite, clearFavorites } from './favorites';
@@ -42,6 +43,7 @@ import { renderImportStatus, importHistory, loadHistoryFile, clearHistory } from
 (window as any).clearHistory = clearHistory;
 (window as any).toggleTheme = toggleTheme;
 (window as any).toggleSide = toggleSide;
+(window as any).showLogs = showLogs;
 (window as any).copyText = copyText;
 (window as any).copyFavorite = copyFavorite;
 (window as any).deleteFavorite = deleteFavorite;
@@ -167,6 +169,27 @@ function toggleTheme(): void {
 function toggleSide(): void { $('side').classList.toggle('open'); }
 function closeSide(): void { $('side').classList.remove('open'); }
 
+function showLogs(): void {
+  const logs = getLogs();
+  const html = logs.map(e =>
+    `<div style="padding:6px 0;border-bottom:1px solid var(--line);font-size:11px">
+      <span style="color:${e.level === 'error' ? 'var(--red)' : 'var(--yellow)'}">[${e.level}]</span>
+      ${new Date(e.ts).toLocaleTimeString()} <strong>${e.msg}</strong>
+      ${e.detail ? `<br><span style="color:var(--muted)">${e.detail}</span>` : ''}
+    </div>`
+  ).join('');
+  const view = $('view-dashboard')!;
+  view.innerHTML = `
+    <div class="card">
+      <div class="toolbar">
+        <h3 style="margin:0">Log de Erros</h3>
+        <button class="btn" onclick="clearLogs();showLogs()">Limpar</button>
+        <button class="btn" onclick="renderDashboard()">Voltar</button>
+      </div>
+      ${html || '<p class="analysis">Nenhum erro registrado.</p>'}
+    </div>`;
+}
+
 export function init(): void {
   renderNav();
   fillSelects();
@@ -175,6 +198,14 @@ export function init(): void {
   updateStatus();
   tryFetchLatest();
   autoImportCSV();
+  on('log-added', () => {
+    const btn = $('logBtn');
+    if (btn) {
+      btn.style.display = '';
+      const cnt = $('logCount');
+      if (cnt) cnt.textContent = String(getLogs('error').length);
+    }
+  });
 }
 
 function renderNav(): void {
@@ -279,7 +310,7 @@ async function tryFetchLatest(): Promise<void> {
             STATE.latest[g.id].data = data.data || data.dataProximoConcurso || '';
             break;
         }
-      } catch { /* try next API */ }
+      } catch { captureWarn('api:fetch', `${g.api} via ${base} failed`); }
     }
   }));
   const badge = $('dataBadge')!;

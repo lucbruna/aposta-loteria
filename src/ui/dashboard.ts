@@ -55,9 +55,9 @@ export function renderDashboard(): void {
           ${onlineCount ? [
             ['Modalidades', String(GAMES.length)],
             ['Online agora', String(onlineCount)],
-            ['Prox. Sorteio', nextDrawDate(latest)],
+            ['Proximos Sorteios', allDrawsList(latest)],
             ['Maior Acumulado', biggestPrize.val ? fmt(biggestPrize.val) : '—'],
-          ].map(s => `<div class="hero-stat"><div class="label">${s[0]}</div><div class="value">${s[1]}</div></div>`).join('') : [
+          ].map(s => `<div class="hero-stat"><div class="label">${s[0]}</div><div class="value${s[0] === 'Proximos Sorteios' ? ' draws-list' : ''}">${s[1]}</div></div>`).join('') : [
             ['Modalidades', String(GAMES.length)],
             ['Melhor Chance', bestOddsName],
             ['Chance', bestOddsVal ? '1 em ' + bestOddsVal.toLocaleString('pt-BR') : '—'],
@@ -90,6 +90,20 @@ function nextDrawDate(latest: Record<string, any>): string {
   if (!dates.length) return '—';
   dates.sort((a, b) => new Date(a.date.split('/').reverse().join('-')).getTime() - new Date(b.date.split('/').reverse().join('-')).getTime());
   return `${dates[0].date} (${dates[0].game})`;
+}
+
+function allDrawsList(latest: Record<string, any>): string {
+  const items = GAMES.map(g => {
+    const d = latest[g.id];
+    const date = d?.dataProximoConcurso || d?.data || '';
+    if (!date) return null;
+    return { game: g, date };
+  }).filter(Boolean) as Array<{ game: Game; date: string }>;
+  if (!items.length) return '—';
+  items.sort((a, b) => new Date(a.date.split('/').reverse().join('-')).getTime() - new Date(b.date.split('/').reverse().join('-')).getTime());
+  return items.map(x =>
+    `<span class="draw-pill" style="--pill:${x.game.color}">${x.date}</span>`
+  ).join('');
 }
 
 function renderEvolutionCard(g: Game): string {

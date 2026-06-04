@@ -61,7 +61,7 @@ export function kmeans(g: Game, hist: DrawRow[], k: number = 4, maxIter: number 
   };
   const rand = rng(42);
 
-  let centroids: ClusterProfile[] = [];
+  const centroids: ClusterProfile[] = [];
   const chosen = new Set<number>();
   for (let i = 0; i < k; i++) {
     let idx: number;
@@ -70,7 +70,7 @@ export function kmeans(g: Game, hist: DrawRow[], k: number = 4, maxIter: number 
     centroids.push({ ...profiles[idx] });
   }
 
-  let assignments: number[] = new Array(n).fill(0);
+  const assignments: number[] = new Array(n).fill(0);
   let prevAssign: number[] = [];
 
   for (let iter = 0; iter < maxIter; iter++) {

@@ -51,7 +51,7 @@ export function mctsTicket(g: Game, index: number, avoid: number[][], onProgress
       path.push(child);
     }
 
-    let ticket = [...node.pick];
+    const ticket = [...node.pick];
     if (ticket.length < g.pick) {
       const used = new Set(ticket);
       const cand = pool.filter(n => !used.has(n));

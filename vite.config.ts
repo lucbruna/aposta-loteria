@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
   resolve: {
@@ -16,17 +17,10 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html'),
       },
       output: {
-        manualChunks: {
-          engine: [
-            './src/engine/analyze.ts',
-            './src/engine/generate.ts',
-            './src/engine/score.ts',
-            './src/engine/genetic.ts',
-            './src/engine/montecarlo.ts',
-            './src/engine/mcts.ts',
-            './src/engine/ml.ts',
-          ],
-          ui: ['./src/ui/index.ts'],
+        manualChunks(id: string) {
+          if (id.includes('chart.js') || id.includes('chartjs-')) return 'charts';
+          if (id.includes('idb-keyval')) return 'vendor';
+          if (id.includes('node_modules')) return 'vendor';
         },
       },
     },
@@ -39,4 +33,35 @@ export default defineConfig({
     environment: 'jsdom',
     include: ['tests/**/*.test.ts'],
   },
+  plugins: [
+    VitePWA({
+      registerType: 'autoUpdate',
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,json}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/.*loteria.*\.vercel\.app\/api\//,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              expiration: { maxEntries: 50, maxAgeSeconds: 86400 },
+            },
+          },
+        ],
+      },
+      manifest: {
+        name: 'Loterias Brasil IA',
+        short_name: 'Loteria IA',
+        description: 'Motor probabilistico para analise de loterias brasileiras',
+        theme_color: '#071018',
+        background_color: '#071018',
+        display: 'standalone',
+        start_url: '/',
+        icons: [
+          { src: '/icons/icon-192.svg', sizes: '192x192', type: 'image/svg+xml' },
+          { src: '/icons/icon-512.svg', sizes: '512x512', type: 'image/svg+xml' },
+        ],
+      },
+    }),
+  ],
 });

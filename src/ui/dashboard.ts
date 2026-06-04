@@ -35,6 +35,7 @@ export function renderDashboard(): void {
     return s + getPrize(latest[g.id]);
   }, 0);
   const onlineCount = Object.keys(latest).filter(k => latest[k]?.concurso).length;
+  console.log('DEBUG dashboard', { totalAccumulated, onlineCount, latestKeys: Object.keys(latest), sample: latest['megasena']?.concurso });
 
   const bestOddsName = [...GAMES].sort((a, b) => (a.odds || Infinity) - (b.odds || Infinity))[0]?.name || '';
   const bestOddsVal = [...GAMES].sort((a, b) => (a.odds || Infinity) - (b.odds || Infinity))[0]?.odds;
@@ -97,6 +98,8 @@ function renderEvolutionCard(g: Game): string {
   const lastDraw = latest?.concurso ? String(latest.concurso) : (hist ? String(hist) : '—');
   const lastDate = latest?.data || '';
   const lastNums: number[] = (latest?.dezenas || []).map(Number).filter((n: number) => !isNaN(n));
+
+  if (g.id === 'megasena') console.log('DEBUG evolutionCard', { g: g.id, hasLatest: !!latest, concurso: latest?.concurso, accumulated, estimated, online: !!latest?.concurso });
 
   const recentDraws = a.hist.slice(-5).reverse();
   const drawDots = recentDraws.slice(0, 5).map(d => {

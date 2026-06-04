@@ -7,7 +7,7 @@ import { $, fmtMoney } from '../utils';
 import { STATE } from '../state';
 
 export function renderQuick(): void {
-  $('#quickOutput')!.innerHTML = 'Escolha a modalidade e o orcamento, depois clique em Gerar rapido.';
+  $('quickOutput')!.innerHTML = 'Escolha a modalidade e o orcamento, depois clique em Gerar rapido.';
 }
 
 export function runQuick(): void {
@@ -16,7 +16,7 @@ export function runQuick(): void {
   const count = g.price ? Math.max(1, Math.min(80, Math.floor(budget / g.price))) : 5;
   (window as any)._simCount = parseInt(($('quickSim') as HTMLSelectElement).value) || 3000;
 
-  $('#quickOutput')!.innerHTML = `<p class="analysis">Gerando ${count} jogos...</p>`;
+  $('quickOutput')!.innerHTML = `<p class="analysis">Gerando ${count} jogos...</p>`;
 
   setTimeout(() => {
     const prog = showProgress('quickOutput', `Gerando ${count} jogos`);
@@ -26,6 +26,6 @@ export function runQuick(): void {
     });
 
     prog.done();
-    $('#quickOutput')!.innerHTML = `<h3>${g.name} | ${STATE.quick.length} jogos | ${g.price ? fmtMoney(STATE.quick.length * g.price) : 'preco variavel'} | ${(window as any)._simCount.toLocaleString()} simulacoes</h3>${STATE.quick.map((p, i) => renderPickRow(g, p, i)).join('')}`;
+    $('quickOutput')!.innerHTML = `<h3>${g.name} | ${STATE.quick.length} jogos | ${g.price ? fmtMoney(STATE.quick.length * g.price) : 'preco variavel'} | ${(window as any)._simCount.toLocaleString()} simulacoes</h3>${STATE.quick.map((p, i) => renderPickRow(g, p, i)).join('')}`;
   }, 50);
 }

@@ -14,7 +14,7 @@ export function runBudget(): void {
   const price = g.price;
 
   if (!price) {
-    $('#budgetOutput')!.innerHTML = `<h3>${g.name}</h3><p class="analysis">Preco variavel. Use palpites otimizados.</p>`;
+    $('budgetOutput')!.innerHTML = `<h3>${g.name}</h3><p class="analysis">Preco variavel. Use palpites otimizados.</p>`;
     return;
   }
 
@@ -25,7 +25,7 @@ export function runBudget(): void {
   const kellyPct = odds ? kellyFraction(edge, odds) : 0.02;
   const kellyCount = Math.max(1, Math.min(count, Math.floor(budget * kellyPct / price)));
 
-  $('#budgetOutput')!.innerHTML = `<p class="analysis">Preparando ${count} jogos... Kelly sugere ${kellyCount} jogos.</p>`;
+  $('budgetOutput')!.innerHTML = `<p class="analysis">Preparando ${count} jogos... Kelly sugere ${kellyCount} jogos.</p>`;
 
   setTimeout(() => {
     const prog = showProgress('budgetOutput', `Montando carteira de ${count} jogos`);
@@ -36,8 +36,8 @@ export function runBudget(): void {
 
     prog.done();
     const cost = count * price;
-    $('#budgetOutput')!.style.setProperty('--accent', g.color);
-    $('#budgetOutput')!.innerHTML = `<h3>${g.name} | ${fmtMoney(cost)} | ${count} jogos</h3>
+    $('budgetOutput')!.style.setProperty('--accent', g.color);
+    $('budgetOutput')!.innerHTML = `<h3>${g.name} | ${fmtMoney(cost)} | ${count} jogos</h3>
       <p class="analysis">${portfolioReport(g, STATE.budget)} Sobra: <strong>${fmtMoney(Math.max(0, budget - cost))}</strong>. Kelly: ${kellyCount} jogos.</p>
       ${STATE.budget.slice(0, 80).map((p, i) => renderPickRow(g, p, i)).join('')}${STATE.budget.length > 80 ? '<p class="analysis">Mostrando 80 primeiros.</p>' : ''}`;
   }, 50);

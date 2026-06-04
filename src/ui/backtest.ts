@@ -7,7 +7,7 @@ import { renderBacktestChart } from './charts';
 import { showProgress } from './progress';
 
 export function renderBacktest(): void {
-  $('#backtestOutput')!.innerHTML = '<h3>Backtest walk-forward</h3><p class="analysis">Importe historico real primeiro. O teste treina com concursos anteriores e compara IA vs aleatorio.</p>';
+  $('backtestOutput')!.innerHTML = '<h3>Backtest walk-forward</h3><p class="analysis">Importe historico real primeiro. O teste treina com concursos anteriores e compara IA vs aleatorio.</p>';
 }
 
 export function runBacktest(): void {
@@ -18,7 +18,7 @@ export function runBacktest(): void {
   (window as any)._simCount = parseInt(($('backtestSim') as HTMLSelectElement).value) || 1000;
 
   if (g.federal || g.columns || original.length < 25) {
-    $('#backtestOutput')!.innerHTML = `<h3>${g.name}</h3><p class="analysis">Backtest exige pelo menos 25 concursos.</p>`;
+    $('backtestOutput')!.innerHTML = `<h3>${g.name}</h3><p class="analysis">Backtest exige pelo menos 25 concursos.</p>`;
     return;
   }
 
@@ -57,8 +57,8 @@ export function runBacktest(): void {
   const ks = ksTest(stats.ai, stats.random);
   const sigText = chi2.p < 0.05 ? 'significativo (p<0.05)' : 'nao significativo';
 
-  $('#backtestOutput')!.style.setProperty('--accent', g.color);
-  $('#backtestOutput')!.innerHTML = `<h3>${g.name} | ${totalTests} concursos testados | ${tickets} jogos/concurso</h3>
+  $('backtestOutput')!.style.setProperty('--accent', g.color);
+  $('backtestOutput')!.innerHTML = `<h3>${g.name} | ${totalTests} concursos testados | ${tickets} jogos/concurso</h3>
     <p class="analysis">Melhor acerto IA: <strong>${bestAi}</strong>. Aleatorio: <strong>${bestRandom}</strong>. Vantagem: <strong>${gain}%</strong>.</p>
     <div style="height:180px;margin:12px 0"><canvas id="backtestChart"></canvas></div>
     <table class="table"><thead><tr><th>Acertos</th><th>IA Next-Gen</th><th>Aleatorio</th></tr></thead>
@@ -75,7 +75,7 @@ export function runAutoTune(): void {
   const tickets = 3;
 
   if (g.federal || g.columns || original.length < 25) {
-    $('#backtestOutput')!.innerHTML = `<h3>Auto-tune ${g.name}</h3><p class="analysis">Requer historico.</p>`;
+    $('backtestOutput')!.innerHTML = `<h3>Auto-tune ${g.name}</h3><p class="analysis">Requer historico.</p>`;
     return;
   }
 
@@ -85,7 +85,7 @@ export function runAutoTune(): void {
     { gens: 50, pop: 100, mutRate: 0.15, crossRate: 0.75 },
   ];
 
-  $('#backtestOutput')!.innerHTML = `<h3>Auto-tune ${g.name}</h3><p class="analysis">Testando ${grids.length} configuracos...</p>`;
+  $('backtestOutput')!.innerHTML = `<h3>Auto-tune ${g.name}</h3><p class="analysis">Testando ${grids.length} configuracos...</p>`;
 
   setTimeout(() => {
     const start = Math.max(10, original.length - limit);
@@ -113,7 +113,7 @@ export function runAutoTune(): void {
     results.sort((a, b) => b.score - a.score);
     delete (g as any).engine;
 
-    $('#backtestOutput')!.innerHTML = `<h3>Auto-tune ${g.name}</h3>
+    $('backtestOutput')!.innerHTML = `<h3>Auto-tune ${g.name}</h3>
       <table class="table"><thead><tr><th>Config</th><th>Vantagem</th><th>Melhor IA</th><th>Melhor Rnd</th></tr></thead>
       <tbody>${results.map((r, i) =>
         `<tr${i === 0 ? ' style="background:color-mix(in srgb,var(--accent) 15%,transparent)"' : ''}>

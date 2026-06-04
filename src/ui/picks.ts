@@ -14,7 +14,7 @@ export function renderPicks(): void {
   const filterMode = ($('filterMode') as HTMLSelectElement).value;
   (window as any)._simCount = parseInt(($('simDepth') as HTMLSelectElement).value) || 3000;
 
-  $('#picksOutput')!.innerHTML = `<h3>${g.name}</h3><p class="analysis">Gerando ${count} jogos com estrategia <strong>${strategy}</strong>...</p>`;
+  $('picksOutput')!.innerHTML = `<h3>${g.name}</h3><p class="analysis">Gerando ${count} jogos com estrategia <strong>${strategy}</strong>...</p>`;
 
   setTimeout(() => {
     const prog = showProgress('picksOutput', `Gerando ${count} jogos (${(window as any)._simCount.toLocaleString()} simulacoes)`);
@@ -24,8 +24,8 @@ export function renderPicks(): void {
     });
 
     prog.done();
-    $('#picksOutput')!.style.setProperty('--accent', g.color);
-    $('#picksOutput')!.innerHTML = `<h3>${g.name} | ${STATE.generated.length} jogos | ${strategy} | ${(window as any)._simCount.toLocaleString()} simulacoes</h3>
+    $('picksOutput')!.style.setProperty('--accent', g.color);
+    $('picksOutput')!.innerHTML = `<h3>${g.name} | ${STATE.generated.length} jogos | ${strategy} | ${(window as any)._simCount.toLocaleString()} simulacoes</h3>
       <p class="analysis">${portfolioReport(g, STATE.generated)}</p>
       ${STATE.generated.map((p, i) => renderPickRow(g, p, i)).join('')}`;
   }, 50);

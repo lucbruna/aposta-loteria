@@ -66,7 +66,7 @@ function showView(v: string): void {
     import: ['Importar historico', 'Use dados reais para calibrar frequencias e gaps'],
   };
   const m = map[v];
-  if (m) { $('#pageTitle').textContent = m[0]; $('#pageSub').textContent = m[1]; }
+  if (m) { $('pageTitle').textContent = m[0]; $('pageSub').textContent = m[1]; }
 
   if (v === 'dashboard') renderDashboard();
   if (v === 'quick') renderQuick();
@@ -83,12 +83,12 @@ function showGame(id: string): void {
   STATE.view = 'game';
   STATE.game = id;
   document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
-  $('#view-game').classList.add('active');
+  $('view-game').classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active'));
   document.querySelectorAll(`[data-game="${id}"]`).forEach(x => x.classList.add('active'));
   const g = GAMES.find(x => x.id === id)!;
-  $('#pageTitle').textContent = g.name;
-  $('#pageSub').textContent = `${g.draw} | aposta base ${fmtMoney(g.price)}`;
+  $('pageTitle').textContent = g.name;
+  $('pageSub').textContent = `${g.draw} | aposta base ${fmtMoney(g.price)}`;
   renderGame(g);
   closeSide();
 }
@@ -163,14 +163,14 @@ function toggleTheme(): void {
   html.dataset.theme = html.dataset.theme === 'light' ? 'dark' : 'light';
 }
 
-function toggleSide(): void { $('#side').classList.toggle('open'); }
-function closeSide(): void { $('#side').classList.remove('open'); }
+function toggleSide(): void { $('side').classList.toggle('open'); }
+function closeSide(): void { $('side').classList.remove('open'); }
 
 export function init(): void {
   renderNav();
   fillSelects();
   renderDashboard();
-  $('#picksOutput')!.innerHTML = '<h3>Palpites otimizados</h3><p class="analysis">Escolha a modalidade e clique em Gerar.</p>';
+  $('picksOutput')!.innerHTML = '<h3>Palpites otimizados</h3><p class="analysis">Escolha a modalidade e clique em Gerar.</p>';
   updateStatus();
   tryFetchLatest();
   autoImportCSV();
@@ -178,7 +178,7 @@ export function init(): void {
 }
 
 function renderNav(): void {
-  $('#gameNav')!.innerHTML = GAMES.map(g =>
+  $('gameNav')!.innerHTML = GAMES.map(g =>
     `<button class="nav-btn" data-game="${g.id}" onclick="showGame('${g.id}')"><span class="nav-dot" style="background:${g.color}"></span>${g.name}</button>`
   ).join('');
 }
@@ -191,7 +191,7 @@ function fillSelects(): void {
 
 function updateStatus(): void {
   const total = GAMES.reduce((s, g) => s + (STATE.history[g.id] || []).length, 0);
-  $('#dataBadge')!.textContent = total ? `${total} concursos locais` : 'Base local';
+  $('dataBadge')!.textContent = total ? `${total} concursos locais` : 'Base local';
 }
 
 async function checkApiStatus(): Promise<void> {
@@ -242,7 +242,7 @@ async function autoImportCSV(): Promise<void> {
     renderImportStatus();
     updateStatus();
   }
-  $('#dataBadge')!.textContent = total ? `${total} concursos locais` : 'Sem historico - Importe em Importar historico';
+  $('dataBadge')!.textContent = total ? `${total} concursos locais` : 'Sem historico - Importe em Importar historico';
 }
 
 function loadEmbeddedData(): number {
@@ -276,7 +276,7 @@ async function tryFetchLatest(): Promise<void> {
       } catch { /* empty */ }
     }
   }));
-  if (ok) $('#dataBadge')!.textContent = `Online: ${ok} resultados`;
+  if (ok) $('dataBadge')!.textContent = `Online: ${ok} resultados`;
 }
 
 init();

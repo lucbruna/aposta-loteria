@@ -5,7 +5,7 @@ import { $, copyText } from '../utils';
 import { pushFavorite, fetchFavorites, deleteFavoriteApi, clearFavoritesApi } from '../api';
 
 export async function renderFavorites(): Promise<void> {
-  const el = $('#favoritesOutput')!;
+  const el = $('favoritesOutput')!;
   if (!STATE.favorites.length) {
     el.innerHTML = '<h3>Favoritas</h3><p class="analysis">Nenhuma carteira salva ainda.</p>';
     return;

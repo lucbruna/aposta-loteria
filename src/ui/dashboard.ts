@@ -12,14 +12,14 @@ import { showProgress } from './progress';
 
 export function renderDashboard(): void {
   const totalHist = GAMES.reduce((s, g) => s + (STATE.history[g.id] || []).length, 0);
-  $('#kpis')!.innerHTML = [
+  $('kpis')!.innerHTML = [
     ['Modalidades', GAMES.length, 'configuradas com regras atuais'],
     ['Concursos importados', totalHist, 'base local do navegador'],
     ['Melhor chance simples', 'Lotofacil', '1 em 3.268.760'],
     ['Fonte', 'CAIXA', 'regras oficiais verificadas'],
   ].map(k => `<div class="card kpi"><div class="label">${k[0]}</div><div class="value">${k[1]}</div><div class="sub">${k[2]}</div></div>`).join('');
 
-  $('#gameCards')!.innerHTML = GAMES.map(g => {
+  $('gameCards')!.innerHTML = GAMES.map(g => {
     const hist = (STATE.history[g.id] || []).length;
     const pick = generateSet(g, 1, 'balanced')[0];
     const pad = (n: number) => String(n).padStart(g.max > 99 ? 5 : 2, '0');
@@ -39,7 +39,7 @@ export function renderGame(g: Game): void {
   const odds = g.odds || comb(g.max - g.min + 1, g.pick);
   const prob = odds ? (1 / odds * 100).toExponential(3) : 'variavel';
 
-  $('#gameView')!.innerHTML = `
+  $('gameView')!.innerHTML = `
     <div class="toolbar" style="--accent:${g.color}">
       <button class="btn primary" onclick="autoFill('${g.id}')">Sugestao IA</button>
       <button class="btn" onclick="clearSel('${g.id}')">Limpar</button>

@@ -40,3 +40,4 @@ export { renderQuick, runQuick } from './ui/quick';
 export { runBacktest, runAutoTune } from './ui/backtest';
 export { runBudget } from './ui/budget';
 export { importHistory, parseHistory, loadHistoryFile, detectGameFromFile, renderImportStatus } from './history/parser';
+import './ui/index';

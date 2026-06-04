@@ -8,6 +8,7 @@ import { mcTickets } from './montecarlo';
 import { geneticTicket } from './genetic';
 import { mctsTicket } from './mcts';
 import { mlBuildForest } from './ml';
+import { saTicket } from './annealing';
 import { extrasFor } from './extras';
 
 export function buildGame(g: Game, strategy: Strategy = 'balanced', index: number = 0, avoid: number[][] = [], onProgress?: (pct: number) => void): number[] {
@@ -47,10 +48,11 @@ export function aiTicket(g: Game, index: number = 0, avoid: number[][] = [], onP
   };
 
   const mc = mcTickets(g, index, avoid, Math.min(simCount, 6000), subProgress(0, 30));
-  const ga = geneticTicket(g, index, avoid, subProgress(30, 70));
+  const sa = saTicket(g, a.hist, todaySeed() + hash(g.id) + index * 3571, subProgress(30, 35));
+  const ga = geneticTicket(g, index, avoid, subProgress(35, 70));
   const mcts = mctsTicket(g, index, avoid, subProgress(70, 80));
 
-  const all = [...mc, ga, mcts];
+  const all = [...mc, sa, ga, mcts];
   let best: number[] | null = null;
   let bestFit = -Infinity;
 

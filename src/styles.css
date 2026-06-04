@@ -49,8 +49,8 @@ button{border:0}
 .top-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
 .content{padding:24px;max-width:1440px;margin:0 auto}
 .grid{display:grid;gap:14px}
-.kpis{grid-template-columns:repeat(4,minmax(150px,1fr));margin-bottom:20px}
-.cards{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+#kpis,#gameCards{display:block}
+#kpis{margin-bottom:20px}
 .two{grid-template-columns:minmax(0,1.1fr) minmax(320px,.9fr)}
 .card{background:var(--panel);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
 .card h3{font-size:13px;margin:0 0 12px;font-weight:600}

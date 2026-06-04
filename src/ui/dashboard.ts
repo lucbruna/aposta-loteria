@@ -38,14 +38,10 @@ export function renderDashboard(): void {
 
   const bestOddsName = [...GAMES].sort((a, b) => (a.odds || Infinity) - (b.odds || Infinity))[0]?.name || '';
   const bestOddsVal = [...GAMES].sort((a, b) => (a.odds || Infinity) - (b.odds || Infinity))[0]?.odds;
-  const mostHist = Math.max(...GAMES.map(g => (STATE.history[g.id] || []).length));
-  const mostHistName = GAMES.find(g => (STATE.history[g.id] || []).length === mostHist)?.name || '';
-
   const biggestPrize = GAMES.reduce((best, g) => {
     const p = getPrize(latest[g.id]);
     return p > best.val ? { name: g.name, val: p } : best;
   }, { name: '', val: 0 });
-  const totalEstimated = GAMES.reduce((s, g) => s + getEstimated(latest[g.id]), 0);
 
   const heroHTML = `
     <div class="hero">
@@ -57,19 +53,16 @@ export function renderDashboard(): void {
         </div>
         <div class="hero-stats">
           ${onlineCount ? [
-            ['Modalidades', String(GAMES.length), ''],
-            ['Online agora', String(onlineCount), 'green'],
-            ['Prox. Sorteio', nextDrawDate(latest), 'gold'],
-            ['Maior Acumulado', biggestPrize.val ? fmt(biggestPrize.val) : '—', 'gold'],
-            ['Total Estimado', fmt(totalEstimated), 'green'],
-            ['Base Historica', totalHist.toLocaleString('pt-BR') + ' conc', ''],
-          ].map(s => `<div class="hero-stat"><div class="label">${s[0]}</div><div class="value${s[2] ? ' ' + s[2] : ''}">${s[1]}</div></div>`) : [
-            ['Modalidades', String(GAMES.length), ''],
-            ['Melhor Chance', bestOddsName, 'green'],
-            ['Chance', bestOddsVal ? '1 em ' + bestOddsVal.toLocaleString('pt-BR') : '—', ''],
-            ['Base Historica', totalHist.toLocaleString('pt-BR') + ' conc', totalHist ? 'green' : ''],
-            ['Mais Dados', mostHistName, ''],
-          ].map(s => `<div class="hero-stat"><div class="label">${s[0]}</div><div class="value${s[2] ? ' ' + s[2] : ''}">${s[1]}</div></div>`)}
+            ['Modalidades', String(GAMES.length)],
+            ['Online agora', String(onlineCount)],
+            ['Prox. Sorteio', nextDrawDate(latest)],
+            ['Maior Acumulado', biggestPrize.val ? fmt(biggestPrize.val) : '—'],
+          ].map(s => `<div class="hero-stat"><div class="label">${s[0]}</div><div class="value">${s[1]}</div></div>`).join('') : [
+            ['Modalidades', String(GAMES.length)],
+            ['Melhor Chance', bestOddsName],
+            ['Chance', bestOddsVal ? '1 em ' + bestOddsVal.toLocaleString('pt-BR') : '—'],
+            ['Base Historica', totalHist.toLocaleString('pt-BR') + ' conc'],
+          ].map(s => `<div class="hero-stat"><div class="label">${s[0]}</div><div class="value">${s[1]}</div></div>`).join('')}
         </div>
       </div>
     </div>`;

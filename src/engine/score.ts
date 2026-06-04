@@ -1,11 +1,38 @@
-import type { Game, AnalysisResult, AIReply } from '../types';
+import type { Game, AnalysisResult, AIReply, DrawRow, MLTree } from '../types';
 import { profileScore, pairScore, entropyScore, popularPatternPenalty } from './filters';
-import { rfScore, fourierScore, gbScore } from './ml';
-import { markovScore } from './markov';
-import { clusterFit } from './cluster';
+import { rfScore, fourierScore, gbScore, gbBuildForest } from './ml';
+import { buildMarkov, markovScore } from './markov';
+import { kmeans, clusterFit } from './cluster';
 import { analyze } from './analyze';
 import { ENGINE, GAMES, SOURCE_NOTE } from '../config';
-import { STATE } from '../state';
+import { STATE, saveMarkovCache, saveClusterCache, saveGBForests } from '../state';
+
+function ensureMarkov(g: Game, hist: DrawRow[]): void {
+  if (!STATE.markovCache) STATE.markovCache = {};
+  const sig = `${g.id}:${hist.length}:${hist[0]?.raw || ''}:${hist[hist.length - 1]?.raw || ''}`;
+  if (!STATE.markovCache[g.id] || STATE.markovCache[g.id]?.sig !== sig) {
+    STATE.markovCache[g.id] = buildMarkov(g, hist);
+    saveMarkovCache();
+  }
+}
+
+function ensureCluster(g: Game, hist: DrawRow[]): void {
+  if (!STATE.clusterCache) STATE.clusterCache = {};
+  if (!STATE.clusterCache[g.id]) {
+    STATE.clusterCache[g.id] = kmeans(g, hist);
+    saveClusterCache();
+  }
+}
+
+function ensureGB(g: Game, hist: DrawRow[]): void {
+  if (!STATE.gbForests) STATE.gbForests = {};
+  const sig = `${g.id}:${hist.length}:${hist[0]?.raw || ''}:${hist[hist.length - 1]?.raw || ''}`;
+  const had = STATE.gbForests[g.id] && (STATE.gbForests[g.id] as any)._sig === sig;
+  if (!had && hist.length >= 30) {
+    STATE.gbForests[g.id] = gbBuildForest(g, hist);
+    saveGBForests();
+  }
+}
 
 export function scoreTicket(g: Game, pick: number[], analysis?: AnalysisResult): number {
   if (g.federal || g.columns) return 50;
@@ -20,14 +47,14 @@ export function scoreTicket(g: Game, pick: number[], analysis?: AnalysisResult):
   const entropy = entropyScore(g, pick);
   const penalty = popularPatternPenalty(g, pick);
 
-  const markov = STATE.markovCache?.[g.id] || null;
-  const mk = markov ? markovScore(g, pick, markov) / 100 : 0;
+  if (!STATE.markovCache?.[g.id] && a.hist.length >= 10) ensureMarkov(g, a.hist);
+  const mk = STATE.markovCache?.[g.id] ? markovScore(g, pick, STATE.markovCache[g.id]!) / 100 : 0;
 
-  const cluster = STATE.clusterCache?.[g.id] || null;
-  const cl = cluster ? clusterFit(g, pick, cluster) / 100 : 0;
+  if (!STATE.clusterCache?.[g.id] && a.hist.length >= 10) ensureCluster(g, a.hist);
+  const cl = STATE.clusterCache?.[g.id] ? clusterFit(g, pick, STATE.clusterCache[g.id]!) / 100 : 0;
 
-  const gb = STATE.gbForests?.[g.id] || null;
-  const gbScoreVal = gb ? gbScore(g, pick, gb as any) / 100 : 0;
+  if (!STATE.gbForests?.[g.id] && a.hist.length >= 30) ensureGB(g, a.hist);
+  const gbScoreVal = STATE.gbForests?.[g.id] ? gbScore(g, pick, STATE.gbForests[g.id] as any) / 100 : 0;
 
   return Math.round(Math.max(1, Math.min(99,
     avg * 0.28 + balance * 0.10 + spans * 0.06 + profile * 0.14 +

@@ -1,9 +1,6 @@
 import type { Game, AnalysisResult, AnalysisProfile, NumberScore, DrawRow } from '../types';
 import { range, sumArr, countRuns } from '../utils';
-import { STATE, saveAnalysisCache, saveMarkovCache, saveClusterCache, saveGBForests } from '../state';
-import { buildMarkov } from './markov';
-import { kmeans } from './cluster';
-import { gbBuildForest } from './ml';
+import { STATE, saveAnalysisCache } from '../state';
 
 export function analyze(g: Game): AnalysisResult {
   const hist = STATE.history[g.id] || [];
@@ -58,27 +55,6 @@ export function analyze(g: Game): AnalysisResult {
   const result: AnalysisResult = { hist, total, score, freq, pair, pairPower, profile, top, cold, weights, mean, sd };
   STATE.analysisCache[g.id] = { sig, data: result };
   saveAnalysisCache();
-
-  if (!STATE.markovCache) STATE.markovCache = {};
-  const cachedMk = STATE.markovCache[g.id];
-  if (!cachedMk || cachedMk.sig !== sig) {
-    STATE.markovCache[g.id] = buildMarkov(g, hist);
-    saveMarkovCache();
-  }
-
-  if (!STATE.clusterCache) STATE.clusterCache = {};
-  if (!STATE.clusterCache[g.id]) {
-    STATE.clusterCache[g.id] = kmeans(g, hist);
-    saveClusterCache();
-  }
-
-  if (!STATE.gbForests) STATE.gbForests = {};
-  const hadGB = STATE.gbForests[g.id] && (STATE.gbForests[g.id] as any)._sig === sig;
-  if (!hadGB && hist.length >= 30) {
-    STATE.gbForests[g.id] = gbBuildForest(g, hist) as any;
-    saveGBForests();
-  }
-
   return result;
 }
 

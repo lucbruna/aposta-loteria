@@ -7,7 +7,7 @@ import { range, todaySeed, hash, mulberry } from '../utils';
 export function mctsTicket(g: Game, index: number, avoid: number[][], onProgress?: (pct: number) => void): number[] {
   const a = analyze(g);
   const pool = range(g);
-  const its = 500;
+  const its = Math.max(200, Math.min(2000, Math.floor(500 * Math.log2((g.max - g.min + 1) / Math.max(g.pick, 1)) + 1)));
 
   interface MCTSNode {
     n: number;
@@ -70,5 +70,14 @@ export function mctsTicket(g: Game, index: number, avoid: number[][], onProgress
     ? root.children.reduce((a, b) => (a.w / a.n > b.w / b.n ? a : b))
     : null;
 
-  return bestChild ? bestChild.pick.sort((x, y) => x - y) : buildGame(g, 'balanced', index, avoid);
+  const pick = bestChild ? [...bestChild.pick] : [];
+  if (pick.length < g.pick) {
+    const used = new Set(pick);
+    const cand = pool.filter(n => !used.has(n));
+    while (pick.length < g.pick && cand.length) {
+      pick.push(cand.splice(Math.floor(rng() * cand.length), 1)[0]);
+    }
+  }
+  if (pick.length < g.pick) return buildGame(g, 'balanced', index, avoid);
+  return pick.sort((x, y) => x - y);
 }

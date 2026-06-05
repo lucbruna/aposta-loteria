@@ -44,17 +44,22 @@ export function markovScore(g: Game, pick: number[], markov: MarkovChain): numbe
   if (!markov) return 50;
   let score = 0;
   let pairs = 0;
+  const alpha = 0.5;
+  let maxPossible = 0;
   for (let i = 0; i < pick.length; i++) {
     for (let j = 0; j < pick.length; j++) {
       if (i === j) continue;
       const k = pick[i] + '-' + pick[j];
       const t = markov.transition.get(k) || 0;
-      const c = markov.counts.get(k) || 1;
-      score += t / c;
+      const c = markov.counts.get(k) || 0;
+      const smoothed = (t + alpha) / (c + alpha * 2);
+      score += smoothed;
+      maxPossible += 1;
       pairs++;
     }
   }
-  return Math.round(Math.min(99, (score / Math.max(pairs, 1)) * 100));
+  const avg = score / Math.max(pairs, 1);
+  return Math.round(Math.min(99, avg * 100 * (maxPossible / Math.max(pairs, 1))));
 }
 
 export function markovTransitions(g: Game, hist: DrawRow[]): Map<number, number> | null {

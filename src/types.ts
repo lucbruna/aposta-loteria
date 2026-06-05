@@ -132,6 +132,10 @@ export interface MLFeatures {
   high: number;
   pairPower: number;
   gap: number;
+  dec?: number;
+  sym?: number;
+  gapMean?: number;
+  gapVar?: number;
 }
 
 export interface MLTree {

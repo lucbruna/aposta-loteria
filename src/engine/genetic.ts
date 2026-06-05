@@ -61,9 +61,27 @@ export function geneticTicket(g: Game, index: number, avoid: number[][], onProgr
   const totalWork = ps + gs * ps; // initial pop + generations
   let done = ps;
 
+  const hallSize = Math.max(el, 3);
+  const hall: Array<{ ticket: number[]; fitness: number }> = [];
+
+  const addToHall = (entry: { ticket: number[]; fitness: number }): void => {
+    const sig = entry.ticket.join(',');
+    if (hall.some(h => h.ticket.join(',') === sig)) return;
+    hall.push(entry);
+    hall.sort((x, y) => y.fitness - x.fitness);
+    if (hall.length > hallSize) hall.length = hallSize;
+  };
+
+  pop.forEach(addToHall);
+
   for (let gen = 0; gen < gs; gen++) {
     pop.sort((x, y) => y.fitness - x.fitness);
-    const np = pop.slice(0, el);
+    const np: Array<{ ticket: number[]; fitness: number }> = pop.slice(0, el).map(e => ({ ...e }));
+
+    for (let h = 0; h < hall.length && np.length < el + Math.floor(ps * 0.1); h++) {
+      const sig = hall[h].ticket.join(',');
+      if (!np.some(p => p.ticket.join(',') === sig)) np.push({ ...hall[h] });
+    }
 
     const divScore = pop.length > 1
       ? pop.slice(0, 10).reduce((s, x, i) => s + (i ? avgDistanceFn(x.ticket, pop.slice(0, i).map(y => y.ticket)) : 0), 0) / 9
@@ -91,10 +109,12 @@ export function geneticTicket(g: Game, index: number, avoid: number[][], onProgr
       done++;
     }
     pop = np;
+    pop.forEach(addToHall);
     if (onProgress) onProgress(Math.round((done / totalWork) * 100));
   }
 
   if (onProgress) onProgress(100);
-  pop.sort((x, y) => y.fitness - x.fitness);
-  return pop[0].ticket;
+
+  const best = [...pop, ...hall].sort((x, y) => y.fitness - x.fitness);
+  return best[0].ticket;
 }

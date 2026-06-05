@@ -5,7 +5,7 @@ export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    ignores: ['dist/', 'node_modules/', 'data-embed.js', 'public/sw.js', '*.json'],
+    ignores: ['dist/', 'node_modules/', 'data-embed.js', 'public/data-embed.js', 'public/sw.js', '*.json'],
   },
   {
     rules: {

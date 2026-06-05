@@ -22,6 +22,44 @@ function mlGetCache(g: Game, hist: DrawRow[]): { freq: number[]; m: number; sd: 
   return entry;
 }
 
+interface CachedGaps {
+  byNum: Map<number, { last: number; gap: number; gaps: number[] }>;
+}
+
+const _gapCache = new Map<string, CachedGaps>();
+
+function gapCache(g: Game, hist: DrawRow[]): CachedGaps {
+  const key = g.id + ':' + hist.length + ':' + (hist[0]?.raw || '') + ':' + (hist[hist.length - 1]?.raw || '');
+  const c = _gapCache.get(key);
+  if (c) return c;
+  const t = hist.length;
+  const byNum = new Map<number, { last: number; gap: number; gaps: number[] }>();
+  const nums = range(g);
+  for (const n of nums) byNum.set(n, { last: -1, gap: t, gaps: [] });
+  let prev: number[] = [];
+  for (let i = 0; i < t; i++) {
+    const d = hist[i];
+    if (i > 0 && d.main === prev) continue;
+    for (const n of d.main) {
+      const e = byNum.get(n);
+      if (!e) continue;
+      if (e.last >= 0) {
+        const g_ = i - e.last;
+        e.gaps.push(g_);
+        e.gap = g_;
+      }
+      e.last = i;
+    }
+    prev = d.main;
+  }
+  for (const [, e] of byNum) {
+    if (e.last >= 0) e.gap = t - 1 - e.last;
+  }
+  _gapCache.set(key, { byNum });
+  if (_gapCache.size > 8) { const first = _gapCache.keys().next().value; if (first) _gapCache.delete(first); }
+  return { byNum };
+}
+
 export function mlFeatures(g: Game, hist: DrawRow[], num: number): MLFeatures {
   const nums = range(g);
   const t = hist.length;
@@ -29,8 +67,8 @@ export function mlFeatures(g: Game, hist: DrawRow[], num: number): MLFeatures {
   const cached = mlGetCache(g, hist);
   const freq = cached ? cached.freq[num - g.min] : 0;
   const maxPPVal = cached?.maxPP ?? 1;
-  const lastIdx = hist.map((d, i) => d.main.includes(num) ? i : -1).filter(i => i >= 0);
-  const gap = lastIdx.length ? t - 1 - lastIdx[lastIdx.length - 1] : t;
+  const gapData = gapCache(g, hist).byNum.get(num) || { last: -1, gap: t, gaps: [] };
+  const gap = gapData.gap;
   const recency = t ? Math.min(gap / Math.max(3, t * 0.25), 1) : 0.5;
   const expected = ds / nums.length;
   const bayes = (freq + 1) / (t + 1 / expected);
@@ -38,6 +76,14 @@ export function mlFeatures(g: Game, hist: DrawRow[], num: number): MLFeatures {
 
   const even = num % 2 === 0 ? 1 : 0;
   const high = num >= (g.min + g.max) / 2 ? 1 : 0;
+  const dec = (g.max - g.min) > 9 ? Math.floor((num - g.min) / 10) : num;
+  const sym = (num - g.min) % 11 === 0 ? 1 : 0;
+
+  const gaps = gapData.gaps;
+  const gapMean = gaps.length ? gaps.reduce((s, v) => s + v, 0) / gaps.length : t;
+  const gapVar = gaps.length > 1
+    ? gaps.reduce((s, v) => s + (v - gapMean) ** 2, 0) / (gaps.length - 1)
+    : 0;
 
   const pairs: number[] = [];
   hist.forEach(d => {
@@ -46,7 +92,10 @@ export function mlFeatures(g: Game, hist: DrawRow[], num: number): MLFeatures {
   });
   const pairPower = pairs.length;
 
-  return { freq, recency, bayes, z, even, high, pairPower: pairPower / maxPPVal, gap };
+  return {
+    freq, recency, bayes, z, even, high, pairPower: pairPower / maxPPVal, gap,
+    dec, sym, gapMean: gapMean / Math.max(t, 1), gapVar: gapVar / Math.max(t * t, 1),
+  };
 }
 
 function buildTree(
@@ -200,19 +249,22 @@ export function gbBuildForest(g: Game, hist: DrawRow[], trees: number = 15, lr: 
   if (cached && (cached as any)._sig === sig) return cached as any;
 
   const nums = range(g);
-  const maxDepth = 3;
+  const maxDepth = Math.max(3, Math.min(5, Math.floor(Math.log2(nums.length + 1))));
   const forest: GBTree[] = [];
 
+  const splitIdx = Math.max(20, Math.floor(hist.length * 0.7));
+  const trainHist = hist.slice(0, splitIdx);
+  const testHist = hist.slice(splitIdx);
+
   const outcomes = nums.map(num => {
-    const splitIdx = Math.floor(hist.length * 0.7);
-    const trainHist = hist.slice(0, splitIdx);
-    const testHist = hist.slice(splitIdx);
     const features = mlFeatures(g, trainHist, num);
     const appeared = testHist.some(d => d.main.includes(num)) ? 1 : 0;
     return { features, appeared };
   });
 
   let residuals = outcomes.map(o => o.appeared);
+  let prevLoss = Infinity;
+  let noImprovement = 0;
 
   for (let t = 0; t < trees; t++) {
     const rng = mulberry(t * 3571 + hash('gb' + g.id));
@@ -228,6 +280,17 @@ export function gbBuildForest(g: Game, hist: DrawRow[], trees: number = 15, lr: 
 
     const preds = outcomes.map((o) => gbPredict(tree, o.features));
     residuals = residuals.map((r, idx) => r - preds[idx] * lr);
+
+    if (t > 0 && t % 3 === 0) {
+      const curLoss = residuals.reduce((s, r) => s + r * r, 0) / residuals.length;
+      if (curLoss >= prevLoss * 0.999) {
+        noImprovement++;
+        if (noImprovement >= 2) break;
+      } else {
+        noImprovement = 0;
+      }
+      prevLoss = curLoss;
+    }
   }
 
   (forest as any)._sig = sig;

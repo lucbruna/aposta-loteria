@@ -40,6 +40,8 @@ export interface Game {
 export interface DrawRow {
   main: number[];
   raw?: string;
+  date?: string;
+  concurso?: number;
 }
 
 export interface AnalysisProfile {

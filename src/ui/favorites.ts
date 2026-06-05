@@ -25,13 +25,20 @@ export async function saveWallet(gameId: string, tickets: any[], label: string):
   STATE.favorites = STATE.favorites.slice(0, 40);
   saveFavorites();
 
-  // Sync to API
   pushFavorite(gameId, label, list).then(ok => {
     if (ok) console.log('Favorite synced to API');
   });
 
   if ($('favoritesOutput')) renderFavorites();
   alert(`Carteira salva: ${g?.name} (${list.length} jogo${list.length > 1 ? 's' : ''}).`);
+}
+
+export async function saveCurrentFavorites(gameId: string): Promise<void> {
+  const { STATE } = await import('../state');
+  if (!STATE.generated.length) return;
+  const g = GAMES.find(x => x.id === gameId);
+  const label = `${g?.name} ${new Date().toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}`;
+  await saveWallet(gameId, STATE.generated, label);
 }
 
 export async function copyFavorite(id: number): Promise<void> {

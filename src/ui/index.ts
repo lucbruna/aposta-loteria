@@ -6,8 +6,8 @@ import { $, fmtMoney, fmtNum, copyText } from '../utils';
 import { emit, on } from '../events';
 import { captureWarn, getLogs, clearLogs } from '../logger';
 import { renderDashboard, renderGame } from './dashboard';
-import { renderPicks } from './picks';
-import { renderFavorites, saveWallet, copyFavorite, deleteFavorite, clearFavorites } from './favorites';
+import { renderPicks, exportPicksCSV, exportPicksJSON, exportPicksText, compareStrategies } from './picks';
+import { renderFavorites, saveWallet, copyFavorite, deleteFavorite, clearFavorites, saveCurrentFavorites } from './favorites';
 import { renderQuick, runQuick } from './quick';
 import { renderBacktest, runBacktest, runAutoTune } from './backtest';
 import { runBudget } from './budget';
@@ -50,6 +50,11 @@ import { renderImportStatus, importHistory, loadHistoryFile, clearHistory, parse
 (window as any).deleteFavorite = deleteFavorite;
 (window as any).clearFavorites = clearFavorites;
 (window as any).saveWallet = saveWallet;
+(window as any).exportPicksCSV = exportPicksCSV;
+(window as any).exportPicksJSON = exportPicksJSON;
+(window as any).exportPicksText = exportPicksText;
+(window as any).saveCurrentFavorites = saveCurrentFavorites;
+(window as any).compareStrategies = compareStrategies;
 (window as any).$ = $;
 
 function showView(v: string): void {

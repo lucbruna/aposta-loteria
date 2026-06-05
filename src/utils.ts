@@ -96,3 +96,39 @@ export function countRuns(pick: number[]): number {
   for (let i = 1; i < pick.length; i++) if (pick[i] === pick[i - 1] + 1) runs++;
   return runs;
 }
+
+export function downloadFile(filename: string, content: string, mime: string = 'text/plain;charset=utf-8'): void {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+export function ticketsToCSV(g: Game, tickets: Array<{ main: number[]; extra?: number[]; score?: number }>): string {
+  const head = ['#', 'numeros', g.extra?.name || 'extra', 'score'];
+  const rows = tickets.map((t, i) => [
+    String(i + 1),
+    t.main.map(n => fmtNum(n, g)).join('-'),
+    t.extra && t.extra.length ? t.extra.join('-') : '',
+    t.score != null ? String(t.score) : '',
+  ].join(','));
+  return [head.join(','), ...rows].join('\n');
+}
+
+export function ticketsToJSON(g: Game, tickets: Array<{ main: number[]; extra?: number[]; score?: number }>): string {
+  return JSON.stringify({
+    game: { id: g.id, name: g.name, pick: g.pick, min: g.min, max: g.max },
+    generated: new Date().toISOString(),
+    tickets: tickets.map((t, i) => ({
+      index: i + 1,
+      main: t.main,
+      extra: t.extra || [],
+      score: t.score || 0,
+    })),
+  }, null, 2);
+}

@@ -5,7 +5,7 @@ import { generateSet } from '../engine/generate';
 import { portfolioReport } from '../engine/score';
 import { renderPickRow } from './renderers';
 import { showProgress } from './progress';
-import { $, downloadFile, ticketsToCSV, ticketsToJSON, fmtNum } from '../utils';
+import { $, downloadFile, ticketsToCSV, ticketsToJSON, fmtNum, hash } from '../utils';
 import { generateWithWorker } from './worker';
 
 export function renderPicks(): void {
@@ -108,11 +108,20 @@ export async function loadPatternsLazy(gId: string): Promise<void> {
   if (!g || !STATE.generated.length) return;
   const { analyzePatterns, patternToHTML, buildCalendarHeatmap, heatmapToHTML } = await import('../engine/patterns');
   const { analyze } = await import('../engine/analyze');
+  const { bootstrapCI, recommendStrategy } = await import('../engine/stats');
   const a = analyze(g);
   const patterns = a.hist.length
     ? patternToHTML(STATE.generated.slice(0, 3).map(p => analyzePatterns(g, p.main, a)).flat().filter((v, i, arr) => arr.findIndex(x => x.id === v.id) === i))
     : '';
+
+  const rec = recommendStrategy(a.hist, g);
+  const scores = STATE.generated.map(t => t.score || 0);
+  const ci = bootstrapCI(scores, 100, hash(g.id));
+  const ciBlock = `<div class="ci-block">
+    <div class="muted">Score medio: <strong>${ci.mean.toFixed(1)}</strong> | IC 95%: <strong>${ci.ci95Low.toFixed(1)} - ${ci.ci95High.toFixed(1)}</strong> (std ${ci.std.toFixed(1)})</div>
+    <div class="rec-block"><span class="muted">Estrategia recomendada:</span> <strong style="color:${g.color}">${rec.strategy}</strong> <span class="muted">(${rec.reason}, confianca ${(rec.confidence * 100).toFixed(0)}%)</span></div>
+  </div>`;
   const heat = a.hist.length ? buildCalendarHeatmap(g, a.hist, new Date().getFullYear(), new Date().getMonth() + 1) : null;
   const heatHTML = heat ? heatmapToHTML(heat) : '';
-  container.innerHTML = `${heatHTML}${patterns ? `<details open class="patterns-section"><summary>Padroes detectados (primeiros 3 jogos)</summary>${patterns}</details>` : ''}`;
+  container.innerHTML = `${ciBlock}${heatHTML}${patterns ? `<details open class="patterns-section"><summary>Padroes detectados (primeiros 3 jogos)</summary>${patterns}</details>` : ''}`;
 }

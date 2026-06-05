@@ -170,3 +170,6 @@ textarea{width:100%;min-height:160px;resize:vertical;background:var(--panel-2);b
 .compare-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:12px 0}
 .compare-col{padding:10px;background:var(--panel-2);border-radius:8px;border:1px solid var(--line)}
 .compare-col h4{margin:0 0 6px 0;font-size:14px;text-transform:uppercase;letter-spacing:.5px}
+
+.ci-block{padding:10px 12px;margin:8px 0;background:var(--panel-2);border-radius:8px;font-size:13px}
+.rec-block{margin-top:4px}

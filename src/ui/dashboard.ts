@@ -97,19 +97,6 @@ export function renderDashboard(): void {
   animateValue('heroAccumulated', totalAccumulated);
 }
 
-function nextDrawDate(latest: Record<string, LatestData>): string {
-  const dates = GAMES.map(g => {
-    const d = latest[g.id];
-    if (d?.dataProximoConcurso) return { game: g.name, date: d.dataProximoConcurso };
-    if (d?.data) return { game: g.name, date: d.data };
-    return null;
-  }).filter(Boolean) as Array<{ game: string; date: string }>;
-
-  if (!dates.length) return '—';
-  dates.sort((a, b) => new Date(a.date.split('/').reverse().join('-')).getTime() - new Date(b.date.split('/').reverse().join('-')).getTime());
-  return `${dates[0].date} (${dates[0].game})`;
-}
-
 function allDrawsList(latest: Record<string, LatestData>): string {
   const items = GAMES.map(g => {
     const d = latest[g.id];

@@ -1,4 +1,4 @@
-import { get, set, del, keys, createStore } from 'idb-keyval';
+import { get, set, del, createStore } from 'idb-keyval';
 import { deflate, inflate } from 'pako';
 
 const customStore = createStore('loteria-db', 'state');

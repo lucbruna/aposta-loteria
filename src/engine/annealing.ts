@@ -1,8 +1,6 @@
-import type { Game, DrawRow, MLFeatures } from '../types';
+import type { Game, DrawRow } from '../types';
 import { mulberry, range, sample } from '../utils';
-import { mlFeatures } from './ml';
 import { scoreTicket } from './score';
-import { analyze } from './analyze';
 
 export function saTicket(
   g: Game,

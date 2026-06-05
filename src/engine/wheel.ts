@@ -1,8 +1,7 @@
-import type { Game, Ticket, AIReply } from '../types';
+import type { Game, Ticket } from '../types';
 import { analyze } from './analyze';
 import { scoreTicket, aiReport } from './score';
 import { extrasFor } from './extras';
-import { comb, range } from '../utils';
 
 function combineLimited(
   arr: number[],
@@ -29,14 +28,18 @@ export function runWheel(g: Game, baseSize: number, limit: number): Ticket[] {
   const combos: number[][] = [];
   combineLimited(base, g.pick, limit * 18, combo => combos.push(combo));
 
-  const chosen: Ticket[] = [];
-  combos.sort((x, y) => scoreTicket(g, y, a) - scoreTicket(g, x, a));
+  const scored = combos.map(c => ({ combo: c, score: scoreTicket(g, c, a) }));
+  scored.sort((x, y) => y.score - x.score);
 
-  for (const combo of combos) {
+  const chosen: Ticket[] = [];
+  for (const { combo } of scored) {
     if (chosen.length >= limit) break;
-    const minDist = chosen.length
-      ? Math.min(...chosen.map(c => combo.filter(n => !c.main.includes(n)).length))
-      : g.pick;
+    let minDist = g.pick;
+    for (const c of chosen) {
+      let d = 0;
+      for (const n of combo) if (!c.main.includes(n)) d++;
+      if (d < minDist) minDist = d;
+    }
     const score = Math.min(99, scoreTicket(g, combo, a) + minDist * 3);
     chosen.push({
       main: combo,

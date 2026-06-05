@@ -136,7 +136,6 @@ export function onlineUpdate(g: Game, newDraws: DrawRow[]): void {
     a.weights.set(n, Math.round(Math.max(1, Math.min(99, 50 + z * 8 + recency * 13 + bayes * 112 + central * 3 + pairs * 8))));
   });
 
-  const sig = `${hist.length}:${hist[0]?.raw || ''}:${hist[hist.length - 1]?.raw || ''}`;
   if (STATE.markovCache) delete STATE.markovCache[g.id];
   if (STATE.clusterCache) delete STATE.clusterCache[g.id];
   if (STATE.gbForests) delete STATE.gbForests[g.id];

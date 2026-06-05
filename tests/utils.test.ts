@@ -40,7 +40,6 @@ describe('Utils', () => {
 
   it('sample with weights should favor higher weights', () => {
     const pool = [1, 2, 3];
-    const weights = new Map([[1, 1], [2, 1], [3, 100]]);
     const results = Array.from({ length: 500 }, (_, i) => {
       const rng = mulberry(i * 7919 + 1);
       return sample(pool, 1, rng)[0];

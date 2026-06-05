@@ -1,4 +1,4 @@
-import type { Game, AnalysisResult } from '../types';
+import type { Game } from '../types';
 import { buildGame } from './generate';
 import { enhancedFit } from './score';
 import { analyze } from './analyze';
@@ -8,7 +8,6 @@ export function mctsTicket(g: Game, index: number, avoid: number[][], onProgress
   const a = analyze(g);
   const pool = range(g);
   const its = 500;
-  const C = 1.4;
 
   interface MCTSNode {
     n: number;

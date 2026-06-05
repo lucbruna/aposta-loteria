@@ -1,5 +1,5 @@
-import type { Game, MLFeatures, MLTree, AnalysisResult, DrawRow } from '../types';
-import { range, hash, mulberry, sumArr } from '../utils';
+import type { Game, MLFeatures, MLTree, DrawRow } from '../types';
+import { range, hash, mulberry } from '../utils';
 import { analyze } from './analyze';
 import { STATE, saveGBForests } from '../state';
 
@@ -15,7 +15,7 @@ function mlGetCache(g: Game, hist: DrawRow[]): { freq: number[]; m: number; sd: 
   const freq = nums.map(n => hist.filter(d => d.main.includes(n)).length);
   const m = freq.reduce((a, b) => a + b, 0) / freq.length || 1;
   const sd = Math.sqrt(freq.reduce((s, v) => s + (v - m) ** 2, 0) / freq.length) || 1;
-  const maxPP = freq.map((f, i) => f * t / 100).reduce((a, b) => Math.max(a, b), 1);
+  const maxPP = freq.map((f) => f * t / 100).reduce((a, b) => Math.max(a, b), 1);
   const entry = { freq, m, sd, maxPP, histLen: t };
   _mlCache.set(key, entry);
   if (_mlCache.size > 20) { const first = _mlCache.keys().next().value; if (first) _mlCache.delete(first); }
@@ -28,8 +28,6 @@ export function mlFeatures(g: Game, hist: DrawRow[], num: number): MLFeatures {
   const ds = g.drawSize || g.pick;
   const cached = mlGetCache(g, hist);
   const freq = cached ? cached.freq[num - g.min] : 0;
-  const m = cached?.m ?? 1;
-  const sd = cached?.sd ?? 1;
   const maxPPVal = cached?.maxPP ?? 1;
   const lastIdx = hist.map((d, i) => d.main.includes(num) ? i : -1).filter(i => i >= 0);
   const gap = lastIdx.length ? t - 1 - lastIdx[lastIdx.length - 1] : t;
@@ -132,7 +130,6 @@ export function mlPredict(tree: MLTree, features: MLFeatures): number {
 
 export function rfScore(g: Game, pick: number[], forest: MLTree[] | null): number {
   if (!forest) return 50;
-  const nums = range(g);
   const a = analyze(g);
 
   const scores = pick.map(n => {
@@ -229,7 +226,7 @@ export function gbBuildForest(g: Game, hist: DrawRow[], trees: number = 15, lr: 
     );
     forest.push(tree);
 
-    const preds = outcomes.map((o, idx) => gbPredict(tree, o.features));
+    const preds = outcomes.map((o) => gbPredict(tree, o.features));
     residuals = residuals.map((r, idx) => r - preds[idx] * lr);
   }
 

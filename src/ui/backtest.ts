@@ -49,7 +49,6 @@ export function runBacktest(): void {
   prog.done();
 
   const rows = Array.from({ length: g.pick + 1 }, (_, i) => i).reverse();
-  const maxCount = Math.max(...rows.map(n => Math.max(stats.ai[n] || 0, stats.random[n] || 0)), 1);
   const aiW = weightedHits(stats.ai);
   const rndW = weightedHits(stats.random);
   const gain = ((aiW - rndW) / Math.max(rndW, 1) * 100).toFixed(1);

@@ -1,12 +1,10 @@
 import type { Game } from '../types';
-import { GAMES, SOURCE_NOTE } from '../config';
-import { STATE, saveAnalysisCache, saveFavorites } from '../state';
-import { analyze } from '../engine/analyze';
-import { buildGame, generateSet } from '../engine/generate';
-import { scoreTicket, aiReport, portfolioReport, ensembleScore } from '../engine/score';
-import { comb, $, fmtMoney, fmtNum, cfg, copyText } from '../utils';
+import { GAMES } from '../config';
+import { STATE, saveHistory } from '../state';
+import { buildGame } from '../engine/generate';
+import { $, fmtMoney, fmtNum, copyText } from '../utils';
 import { emit, on } from '../events';
-import { captureError, captureWarn, getLogs, clearLogs } from '../logger';
+import { captureWarn, getLogs, clearLogs } from '../logger';
 import { renderDashboard, renderGame } from './dashboard';
 import { renderPicks } from './picks';
 import { renderFavorites, saveWallet, copyFavorite, deleteFavorite, clearFavorites } from './favorites';
@@ -14,7 +12,10 @@ import { renderQuick, runQuick } from './quick';
 import { renderBacktest, runBacktest, runAutoTune } from './backtest';
 import { runBudget } from './budget';
 import { runWheel, renderWheel } from './wheel';
-import { renderImportStatus, importHistory, loadHistoryFile, clearHistory } from '../history/parser';
+import { renderImportStatus, importHistory, loadHistoryFile, clearHistory, parseHistory } from '../history/parser';
+
+
+(window as any).clearLogs = clearLogs;
 
 
 (window as any).showView = showView;
@@ -178,6 +179,7 @@ function copyWheel(): void {
 function toggleTheme(): void {
   const html = document.documentElement;
   html.dataset.theme = html.dataset.theme === 'light' ? 'dark' : 'light';
+  try { localStorage.setItem('loterias-theme', html.dataset.theme); } catch {}
 }
 
 function toggleSide(): void { $('side').classList.toggle('open'); }
@@ -216,6 +218,10 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
 });
 
 export function init(): void {
+  try {
+    const saved = localStorage.getItem('loterias-theme');
+    if (saved === 'light' || saved === 'dark') document.documentElement.dataset.theme = saved;
+  } catch {}
   renderNav();
   fillSelects();
   renderDashboard();
@@ -268,12 +274,10 @@ async function autoImportCSV(): Promise<void> {
         const r = await fetch(path, { cache: 'no-store' });
         if (!r.ok) continue;
         const text = await r.text();
-        const { parseHistory } = await import('../history/parser');
         const rows = parseHistory(text, g);
         if (rows.length >= 25) {
           STATE.history[f.id] = rows;
           delete STATE.analysisCache[f.id];
-          const { saveHistory } = await import('../state');
           saveHistory(f.id);
           imported++;
           break;
@@ -282,6 +286,7 @@ async function autoImportCSV(): Promise<void> {
     }
   }
 
+  if (imported > 0) console.log(`[autoImport] ${imported} jogos carregados`);
   const total = GAMES.reduce((s, g) => s + (STATE.history[g.id] || []).length, 0);
   if (total) {
     renderDashboard();

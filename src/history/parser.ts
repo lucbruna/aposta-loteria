@@ -2,7 +2,7 @@ import type { Game, DrawRow } from '../types';
 import { GAMES } from '../config';
 import { STATE, saveHistory } from '../state';
 import { renderDashboard } from '../ui/dashboard';
-import { pushHistory, checkApi } from '../api';
+import { pushHistory } from '../api';
 
 export function parseHistory(text: string, g: Game): DrawRow[] {
   const normalized = String(text || '')
@@ -112,7 +112,7 @@ export function loadHistoryFile(event: Event): void {
   reader.readAsText(file, ext === 'csv' ? 'UTF-8' : 'ISO-8859-1');
 }
 
-export function importHistory(source: string = 'texto colado'): void {
+export function importHistory(_source: string = 'texto colado'): void {
   const importGame = document.getElementById('importGame') as HTMLSelectElement;
   const g = GAMES.find(x => x.id === importGame.value);
   if (!g) return;

@@ -1,5 +1,4 @@
 import type { Game, DrawRow } from '../types';
-import { GAMES } from '../config';
 import { generateSet } from '../engine/generate';
 import { STATE } from '../state';
 import { captureError } from '../logger';
@@ -15,8 +14,6 @@ type WorkerPayload = {
 };
 
 type WorkerMessage = { type: string; payload: any };
-
-const G = GAMES;
 
 self.onmessage = (e: MessageEvent<WorkerMessage>) => {
   const { type, payload } = e.data as { type: string; payload: WorkerPayload };

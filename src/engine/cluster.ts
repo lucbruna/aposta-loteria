@@ -1,5 +1,5 @@
 import type { Game, DrawRow } from '../types';
-import { range, sumArr } from '../utils';
+import { sumArr } from '../utils';
 
 export interface ClusterProfile {
   sumMean: number;

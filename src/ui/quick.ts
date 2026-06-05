@@ -1,11 +1,10 @@
 import { GAMES } from '../config';
 import { generateSet } from '../engine/generate';
-import { portfolioReport } from '../engine/score';
 import { renderPickRow } from './renderers';
 import { showProgress } from './progress';
 import { $, fmtMoney } from '../utils';
 import { STATE } from '../state';
-import { generateWithWorker, terminateWorker } from './worker';
+import { generateWithWorker } from './worker';
 
 export function renderQuick(): void {
   $('quickOutput')!.innerHTML = 'Escolha a modalidade e o orcamento, depois clique em Gerar rapido.';

@@ -1,4 +1,3 @@
-import type { Game } from '../types';
 import { GAMES } from '../config';
 import { STATE } from '../state';
 import { generateSet } from '../engine/generate';
@@ -6,7 +5,7 @@ import { portfolioReport } from '../engine/score';
 import { renderPickRow } from './renderers';
 import { showProgress } from './progress';
 import { $ } from '../utils';
-import { generateWithWorker, terminateWorker } from './worker';
+import { generateWithWorker } from './worker';
 
 export function renderPicks(): void {
   const g = GAMES.find(x => x.id === ($('bulkGame') as HTMLSelectElement).value) || GAMES[0];

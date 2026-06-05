@@ -1,10 +1,10 @@
-import type { Game, AnalysisResult, AIReply, DrawRow, MLTree } from '../types';
+import type { Game, AnalysisResult, AIReply, DrawRow } from '../types';
 import { profileScore, pairScore, entropyScore, popularPatternPenalty } from './filters';
 import { rfScore, fourierScore, gbScore, gbBuildForest } from './ml';
 import { buildMarkov, markovScore } from './markov';
 import { kmeans, clusterFit } from './cluster';
 import { analyze } from './analyze';
-import { ENGINE, GAMES, SOURCE_NOTE } from '../config';
+import { ENGINE } from '../config';
 import { STATE, saveMarkovCache, saveClusterCache, saveGBForests } from '../state';
 
 function ensureMarkov(g: Game, hist: DrawRow[]): void {
@@ -131,19 +131,12 @@ export function aiReport(g: Game, pick: number[]): AIReply {
   const penalty = popularPatternPenalty(g, pick);
 
   const markov = STATE.markovCache?.[g.id] || null;
-  const mk = markov ? markovScore(g, pick, markov) : 50;
-
   const cluster = STATE.clusterCache?.[g.id] || null;
-  const cl = cluster ? clusterFit(g, pick, cluster) : 50;
+  void markov; void cluster;
 
   const grade = scoreTicket(g, pick, a) >= 82 ? 'Elite' : scoreTicket(g, pick, a) >= 70 ? 'Forte' : 'Moderado';
   const risk = penalty > 12 ? 'padrao popular penalizado' : entropy < 55 ? 'baixa dispersao' : 'perfil equilibrado';
   return { grade, profile, pair, entropy, risk };
-}
-
-function calcCoverage(g: Game, set: any[]): number {
-  const all = set.flatMap(x => x.main);
-  return new Set(all).size;
 }
 
 function calcOverlap(g: Game, set: any[]): number {

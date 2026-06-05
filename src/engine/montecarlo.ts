@@ -1,4 +1,4 @@
-import type { Game, AnalysisResult } from '../types';
+import type { Game } from '../types';
 import { buildGame } from './generate';
 import { enhancedFit } from './score';
 import { analyze } from './analyze';

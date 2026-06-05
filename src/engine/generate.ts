@@ -1,4 +1,4 @@
-import type { Game, AnalysisResult, Ticket, Strategy, FilterMode, MLTree } from '../types';
+import type { Game, AnalysisResult, Ticket, Strategy, FilterMode } from '../types';
 import { analyze } from './analyze';
 import { enhancedFit, scoreTicket, aiReport } from './score';
 import { passesFilters } from './filters';
@@ -98,7 +98,7 @@ export function generateSet(
   return out.sort((a, b) => b.score - a.score);
 }
 
-function repairComposition(g: Game, pick: number[], a: AnalysisResult, rng: () => number): number[] {
+function repairComposition(g: Game, pick: number[], a: AnalysisResult, _rng: () => number): number[] {
   const targetEven = Math.round(g.pick / 2);
   const pool = range(g).filter(n => !pick.includes(n));
   let guard = 0;

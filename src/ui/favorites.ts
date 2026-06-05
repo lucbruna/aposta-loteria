@@ -1,8 +1,7 @@
 import { GAMES } from '../config';
 import { STATE, saveFavorites } from '../state';
-import { renderPickRow } from './renderers';
 import { $, copyText } from '../utils';
-import { pushFavorite, fetchFavorites, deleteFavoriteApi, clearFavoritesApi } from '../api';
+import { pushFavorite, deleteFavoriteApi, clearFavoritesApi } from '../api';
 
 export async function renderFavorites(): Promise<void> {
   const el = $('favoritesOutput')!;

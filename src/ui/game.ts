@@ -1,7 +1,7 @@
 import type { Game, AnalysisResult } from '../types';
 import { STATE } from '../state';
 import { scoreTicket, aiReport, ensembleScore } from '../engine/score';
-import { $, fmtNum } from '../utils';
+import { fmtNum } from '../utils';
 
 export function suggestionText(g: Game, a: AnalysisResult, sel: number[]): string {
   if (g.federal) return 'Federal usa bilhete de 5 digitos.';

@@ -4,9 +4,8 @@ import { analyze } from '../src/engine/analyze';
 import { buildGame, generateSet } from '../src/engine/generate';
 import { scoreTicket, portfolioReport } from '../src/engine/score';
 import { mlBuildForest, rfScore, fourierScore } from '../src/engine/ml';
-import { saTicket } from '../src/engine/annealing';
 import { mcTickets } from '../src/engine/montecarlo';
-import type { Game, Strategy, FilterMode, Ticket } from '../src/types';
+import type { Ticket, Strategy } from '../src/types';
 
 describe('Engine Integration', () => {
   const g = GAMES[0]; // Mega-Sena

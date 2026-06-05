@@ -16,7 +16,7 @@ export function renderNumberGrid(g: Game, a: AnalysisResult, sel: number[]): str
   ).join('');
 }
 
-export function renderMetrics(g: Game, rows: Array<{ n: number; score: number }>, a: AnalysisResult): string {
+export function renderMetrics(g: Game, rows: Array<{ n: number; score: number }>, _a: AnalysisResult): string {
   const max = Math.max(...rows.map(x => x.score), 1);
   return `<div class="metric-list">${rows.map(x =>
     `<div class="metric"><strong style="color:${g.color}">${fmtNum(x.n, g)}</strong><div class="bar"><span style="width:${Math.round(x.score / max * 100)}%"></span></div><span>${x.score}</span></div>`

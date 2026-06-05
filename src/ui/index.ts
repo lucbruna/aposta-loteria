@@ -6,7 +6,7 @@ import { $, fmtMoney, fmtNum, copyText } from '../utils';
 import { emit, on } from '../events';
 import { captureWarn, getLogs, clearLogs } from '../logger';
 import { renderDashboard, renderGame } from './dashboard';
-import { renderPicks, exportPicksCSV, exportPicksJSON, exportPicksText, compareStrategies } from './picks';
+import { renderPicks, exportPicksCSV, exportPicksJSON, exportPicksText, compareStrategies, loadPatternsLazy } from './picks';
 import { renderFavorites, saveWallet, copyFavorite, deleteFavorite, clearFavorites, saveCurrentFavorites } from './favorites';
 import { renderQuick, runQuick } from './quick';
 import { renderBacktest, runBacktest, runAutoTune } from './backtest';
@@ -55,6 +55,7 @@ import { renderImportStatus, importHistory, loadHistoryFile, clearHistory, parse
 (window as any).exportPicksText = exportPicksText;
 (window as any).saveCurrentFavorites = saveCurrentFavorites;
 (window as any).compareStrategies = compareStrategies;
+(window as any).loadPatternsLazy = loadPatternsLazy;
 (window as any).$ = $;
 
 function showView(v: string): void {
@@ -85,7 +86,11 @@ function showView(v: string): void {
 
   if (v === 'dashboard') renderDashboard();
   if (v === 'quick') renderQuick();
-  if (v === 'picks') renderPicks();
+  if (v === 'picks') {
+    renderPicks();
+    const g = GAMES.find(x => x.id === ($('bulkGame') as HTMLSelectElement).value) || GAMES[0];
+    setTimeout(() => loadPatternsLazy(g.id), 100);
+  }
   if (v === 'favorites') renderFavorites();
   if (v === 'backtest') renderBacktest();
   if (v === 'budget') runBudget();

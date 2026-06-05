@@ -3,8 +3,6 @@ import { GAMES } from '../config';
 import { STATE } from '../state';
 import { generateSet } from '../engine/generate';
 import { portfolioReport } from '../engine/score';
-import { analyzePatterns, patternToHTML, buildCalendarHeatmap, heatmapToHTML } from '../engine/patterns';
-import { analyze } from '../engine/analyze';
 import { renderPickRow } from './renderers';
 import { showProgress } from './progress';
 import { $, downloadFile, ticketsToCSV, ticketsToJSON, fmtNum } from '../utils';
@@ -47,12 +45,6 @@ export function renderPicks(): void {
 function renderPicksHTML(g: Game, generated: any[], strategy: string, sims: number): string {
   const ts = new Date().toISOString().slice(0, 10);
   void ts;
-  const a = analyze(g);
-  const patterns = generated.length && a.hist.length
-    ? patternToHTML(generated.slice(0, 3).map(p => analyzePatterns(g, p.main, a)).flat().filter((v, i, arr) => arr.findIndex(x => x.id === v.id) === i))
-    : '';
-  const heat = a.hist.length ? buildCalendarHeatmap(g, a.hist, new Date().getFullYear(), new Date().getMonth() + 1) : null;
-  const heatHTML = heat ? heatmapToHTML(heat) : '';
   return `<h3>${g.name} | ${generated.length} jogos | ${strategy} | ${sims.toLocaleString()} simulacoes</h3>
     <p class="analysis">${portfolioReport(g, generated)}</p>
     <div class="action-row" style="margin:8px 0;display:flex;gap:8px;flex-wrap:wrap">
@@ -61,8 +53,7 @@ function renderPicksHTML(g: Game, generated: any[], strategy: string, sims: numb
       <button class="btn" onclick="exportPicksText('${g.id}')" aria-label="Copiar texto">Copiar texto</button>
       <button class="btn" onclick="saveCurrentFavorites('${g.id}')" aria-label="Salvar todos nos favoritos">Salvar todos</button>
     </div>
-    ${heatHTML}
-    ${patterns ? `<details open class="patterns-section"><summary>Padroes detectados (primeiros 3 jogos)</summary>${patterns}</details>` : ''}
+    <div id="patternsAndHeat-${g.id}" class="lazy-block" data-game="${g.id}"></div>
     <div style="margin-top:8px"><button class="btn" onclick="compareStrategies('${g.id}')">Comparar estrategias</button></div>
     ${generated.map((p, i) => renderPickRow(g, p, i)).join('')}`;
 }
@@ -108,4 +99,20 @@ export async function compareStrategies(gId: string): Promise<void> {
     <div class="compare-grid">${Object.entries(out).map(([k, v]) =>
       `<div class="compare-col"><h4 style="color:${g.color}">${k}</h4><div class="muted">Score medio: <strong>${v.avg}</strong></div>${v.tickets.map(t => `<div class="pick-row"><div class="balls">${t.main.map((n: number) => `<span class="ball small pick" style="--accent:${g.color}">${fmtNum(n, g)}</span>`).join('')}</div><div class="muted">${t.score}/99</div></div>`).join('')}</div>`
     ).join('')}</div>`;
+}
+
+export async function loadPatternsLazy(gId: string): Promise<void> {
+  const container = document.getElementById(`patternsAndHeat-${gId}`);
+  if (!container) return;
+  const g = GAMES.find(x => x.id === gId);
+  if (!g || !STATE.generated.length) return;
+  const { analyzePatterns, patternToHTML, buildCalendarHeatmap, heatmapToHTML } = await import('../engine/patterns');
+  const { analyze } = await import('../engine/analyze');
+  const a = analyze(g);
+  const patterns = a.hist.length
+    ? patternToHTML(STATE.generated.slice(0, 3).map(p => analyzePatterns(g, p.main, a)).flat().filter((v, i, arr) => arr.findIndex(x => x.id === v.id) === i))
+    : '';
+  const heat = a.hist.length ? buildCalendarHeatmap(g, a.hist, new Date().getFullYear(), new Date().getMonth() + 1) : null;
+  const heatHTML = heat ? heatmapToHTML(heat) : '';
+  container.innerHTML = `${heatHTML}${patterns ? `<details open class="patterns-section"><summary>Padroes detectados (primeiros 3 jogos)</summary>${patterns}</details>` : ''}`;
 }

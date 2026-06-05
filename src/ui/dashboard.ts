@@ -233,10 +233,27 @@ export function renderGame(g: Game): void {
       <div class="card"><h3>Pares</h3>
         <div class="canvas-box tall"><canvas id="pairChart-${g.id}" role="img" aria-label="Mapa de calor de pares de números"></canvas></div>
       </div>
+    </div>
+    <div class="card" style="margin-top:14px;--accent:${g.color}">
+      <h3>Co-ocorrencia completa</h3>
+      <div id="cooc-${g.id}" class="cooc-lazy" data-game="${g.id}"><p class="muted">Carregando matriz...</p></div>
     </div>`;
 
   setTimeout(() => {
     renderFreqChart(`freqChart-${g.id}`, g, a);
     renderPairHeatmap(`pairChart-${g.id}`, g, a);
+    renderCoOccurrenceLazy(g.id);
   }, 100);
+}
+
+async function renderCoOccurrenceLazy(gId: string): Promise<void> {
+  const el = document.getElementById(`cooc-${gId}`);
+  if (!el) return;
+  const g = GAMES.find(x => x.id === gId);
+  if (!g) return;
+  const { buildCoOccurrence, coOccurrenceToHTML } = await import('../engine/patterns');
+  const { analyze } = await import('../engine/analyze');
+  const a = analyze(g);
+  const c = buildCoOccurrence(g, a.hist);
+  el.innerHTML = c ? coOccurrenceToHTML(c) : '<p class="muted">Sem historico suficiente.</p>';
 }

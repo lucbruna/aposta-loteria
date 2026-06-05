@@ -160,5 +160,78 @@ export function heatmapToHTML(h: CalendarHeatmap): string {
   }).join('')}</div></div>`;
 }
 
+export interface CoOccurrenceMatrix {
+  labels: number[];
+  matrix: number[][];
+  totalDraws: number;
+  topPairs: { a: number; b: number; count: number; rate: number }[];
+}
+
+export function buildCoOccurrence(g: Game, hist: DrawRow[]): CoOccurrenceMatrix | null {
+  if (g.federal || g.columns) return null;
+  if (hist.length < 5) return null;
+  const labels = range(g);
+  const idx = new Map<number, number>();
+  labels.forEach((n, i) => idx.set(n, i));
+  const matrix: number[][] = labels.map(() => labels.map(() => 0));
+
+  for (const draw of hist) {
+    const present = draw.main.filter(n => idx.has(n));
+    for (let i = 0; i < present.length; i++) {
+      for (let j = i + 1; j < present.length; j++) {
+        const a = idx.get(present[i])!;
+        const b = idx.get(present[j])!;
+        matrix[a][b]++;
+        matrix[b][a]++;
+      }
+    }
+  }
+
+  const pairs: { a: number; b: number; count: number; rate: number }[] = [];
+  for (let i = 0; i < labels.length; i++) {
+    for (let j = i + 1; j < labels.length; j++) {
+      if (matrix[i][j] > 0) {
+        pairs.push({ a: labels[i], b: labels[j], count: matrix[i][j], rate: matrix[i][j] / hist.length });
+      }
+    }
+  }
+  pairs.sort((x, y) => y.count - x.count);
+  return { labels, matrix, totalDraws: hist.length, topPairs: pairs.slice(0, 15) };
+}
+
+export function coOccurrenceToHTML(c: CoOccurrenceMatrix, topN: number = 30): string {
+  if (!c) return '';
+  const max = Math.max(...c.matrix.flat(), 1);
+  const labelsToShow = c.labels.length <= 60 ? c.labels : c.labels.filter((_, i) => i % 2 === 0);
+  const labelIdx = new Map<number, number>();
+  labelsToShow.forEach((n, i) => labelIdx.set(n, i));
+  const cellSize = labelsToShow.length > 30 ? 14 : 22;
+  const cells: string[] = [];
+  cells.push('<div class="cooc-row cooc-header"><div class="cooc-corner"></div>');
+  for (const l of labelsToShow) cells.push(`<div class="cooc-h" style="width:${cellSize}px">${l % 10}</div>`);
+  cells.push('</div>');
+  for (const li of labelsToShow) {
+    cells.push(`<div class="cooc-row"><div class="cooc-v" style="width:${cellSize}px;height:${cellSize}px">${li}</div>`);
+    for (const lj of labelsToShow) {
+      const ii = labelIdx.get(li)!, jj = labelIdx.get(lj)!;
+      const v = c.matrix[ii][jj];
+      const intensity = v / max;
+      const bg = v === 0 ? 'transparent' : `rgba(56,189,248,${0.1 + intensity * 0.85})`;
+      cells.push(`<div class="cooc-cell" style="width:${cellSize}px;height:${cellSize}px;background:${bg}" title="${li}+${lj}: ${v}x">${v > max * 0.5 ? v : ''}</div>`);
+    }
+    cells.push('</div>');
+  }
+  const pairsList = c.topPairs.slice(0, topN).map(p =>
+    `<div class="cooc-pair"><strong>${p.a}+${p.b}</strong> <span class="muted">${p.count}x</span> <span class="muted">(${(p.rate * 100).toFixed(1)}%)</span></div>`
+  ).join('');
+  return `<div class="cooc-wrap">
+    <details open><summary>Matriz de co-ocorrencia (${c.totalDraws} sorteios)</summary>
+    <div class="cooc-scroll"><div class="cooc-grid">${cells.join('')}</div></div>
+    <h4 style="margin:12px 0 6px;font-size:13px">Pares mais frequentes</h4>
+    <div class="cooc-pairs">${pairsList}</div>
+    </details>
+  </div>`;
+}
+
 void countRuns;
 void range;

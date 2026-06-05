@@ -1,14 +1,30 @@
-export function showProgress(containerId: string, label?: string): { update: (pct: number) => void; done: () => void } {
+export function showProgress(containerId: string, label?: string, onCancel?: () => void): { update: (pct: number) => void; done: () => void; cancel: () => void } {
   const container = document.getElementById(containerId);
-  if (!container) return { update: () => {}, done: () => {} };
+  if (!container) return { update: () => {}, done: () => {}, cancel: () => {} };
 
   const wrapper = document.createElement('div');
   wrapper.style.cssText = 'margin:12px 0;padding:12px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);';
 
-  const labelEl = document.createElement('div');
-  labelEl.style.cssText = 'display:flex;justify-content:space-between;margin-bottom:6px;font-size:12px;color:var(--muted);';
-  labelEl.innerHTML = `<span>${label || 'Processando...'}</span><span id="${containerId}-pct">0%</span>`;
-  wrapper.appendChild(labelEl);
+  const labelRow = document.createElement('div');
+  labelRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:12px;color:var(--muted);gap:8px;';
+
+  const labelEl = document.createElement('span');
+  labelEl.textContent = label || 'Processando...';
+  const pctEl = document.createElement('span');
+  pctEl.id = `${containerId}-pct`;
+  pctEl.textContent = '0%';
+  labelRow.appendChild(labelEl);
+  labelRow.appendChild(pctEl);
+  wrapper.appendChild(labelRow);
+
+  if (onCancel) {
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn';
+    cancelBtn.style.cssText = 'padding:4px 10px;font-size:11px;margin-bottom:6px;';
+    cancelBtn.textContent = 'Cancelar';
+    cancelBtn.onclick = () => { onCancel(); cancelBtn.disabled = true; cancelBtn.textContent = 'Cancelando...'; };
+    wrapper.appendChild(cancelBtn);
+  }
 
   const barOuter = document.createElement('div');
   barOuter.style.cssText = 'height:8px;background:var(--panel-2);border-radius:99px;overflow:hidden;';
@@ -28,16 +44,20 @@ export function showProgress(containerId: string, label?: string): { update: (pc
       if (removed) return;
       currentPct = Math.min(100, Math.max(0, pct));
       barInner.style.width = `${currentPct}%`;
-      const pctEl = document.getElementById(`${containerId}-pct`);
-      if (pctEl) pctEl.textContent = `${Math.round(currentPct)}%`;
+      pctEl.textContent = `${Math.round(currentPct)}%`;
     },
     done() {
       if (removed) return;
       currentPct = 100;
       barInner.style.width = '100%';
-      const pctEl = document.getElementById(`${containerId}-pct`);
-      if (pctEl) pctEl.textContent = '100%';
+      pctEl.textContent = '100%';
       setTimeout(() => { if (wrapper.parentNode) wrapper.remove(); removed = true; }, 600);
+    },
+    cancel() {
+      if (onCancel) onCancel();
+      if (removed) return;
+      wrapper.remove();
+      removed = true;
     },
   };
 }

@@ -77,6 +77,7 @@ export function generateSet(
   const maxAttempts = count * 12;
 
   for (let i = 0; out.length < count && guard < maxAttempts; guard++, i++) {
+    if (STATE._cancelled) break;
     const ticketProgress = strategy === 'ai' && onProgress
       ? (subPct: number) => {
           const overall = (out.length + subPct / 100) / count * 100;

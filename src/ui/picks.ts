@@ -20,7 +20,8 @@ export function renderPicks(): void {
   $('picksOutput')!.innerHTML = `<h3>${g.name}</h3><p class="analysis">Gerando ${count} jogos com estrategia <strong>${strategy}</strong>...</p>`;
 
   setTimeout(async () => {
-    const prog = showProgress('picksOutput', `Gerando ${count} jogos (${STATE._simCount!.toLocaleString()} simulacoes)`);
+    STATE._cancelled = false;
+    const prog = showProgress('picksOutput', `Gerando ${count} jogos (${STATE._simCount!.toLocaleString()} simulacoes)`, () => { STATE._cancelled = true; });
     const hist = STATE.history[g.id] || [];
 
     try {

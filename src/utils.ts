@@ -1,4 +1,4 @@
-import type { Game } from './types';
+import type { Game, DrawRow } from './types';
 import { ENGINE } from './config';
 
 export function $(id: string): HTMLElement {
@@ -131,4 +131,26 @@ export function ticketsToJSON(g: Game, tickets: Array<{ main: number[]; extra?: 
       score: t.score || 0,
     })),
   }, null, 2);
+}
+
+export function clampInt(value: unknown, min: number, max: number, fallback: number): number {
+  const n = Math.floor(Number(value));
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+}
+
+export function isValidDrawRow(g: Game, row: DrawRow): boolean {
+  if (!row || !Array.isArray(row.main)) return false;
+  if (g.federal) return row.main.length === 1 && row.main[0] >= 0 && row.main[0] < 100000;
+  if (g.columns) return row.main.length === g.columns && row.main.every(n => Number.isInteger(n) && n >= 0 && n <= 9);
+  if (row.main.length !== g.pick) return false;
+  if (new Set(row.main).size !== row.main.length) return false;
+  return row.main.every(n => Number.isInteger(n) && n >= g.min && n <= g.max);
+}
+
+export function sanitizeText(s: string, maxLen: number = 5000): string {
+  return String(s || '').slice(0, maxLen).split('').filter(c => {
+    const code = c.charCodeAt(0);
+    return code >= 0x20 && code !== 0x7F;
+  }).join('');
 }

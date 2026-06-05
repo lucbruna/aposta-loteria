@@ -22,6 +22,7 @@ export interface GlobalState {
   clusterCache?: Record<string, ClusterResult | null>;
   gbForests?: Record<string, GBTree[] | null>;
   _simCount?: number;
+  _cancelled?: boolean;
 }
 
 export const STATE: GlobalState = {

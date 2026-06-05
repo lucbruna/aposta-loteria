@@ -3,6 +3,7 @@ import { STATE } from '../state';
 import { generateSet } from '../engine/generate';
 import { portfolioReport } from '../engine/score';
 import { kellyFraction } from '../engine/stats';
+import { optimizePortfolio, applyKelly, portfolioToSummary } from '../engine/portfolio';
 import { comb, fmtMoney, cfg, $ } from '../utils';
 import { renderPickRow } from './renderers';
 import { showProgress } from './progress';
@@ -11,7 +12,13 @@ export function runBudget(): void {
   const g = GAMES.find(x => x.id === ($('budgetGame') as HTMLSelectElement).value) || GAMES[0];
   const budget = Math.max(0, Number(($('budgetValue') as HTMLInputElement).value) || 0);
   const strategy = ($('budgetStrategy') as HTMLSelectElement).value;
+  const mode = ($('budgetMode') as HTMLSelectElement)?.value || 'single';
   const price = g.price;
+
+  if (mode === 'multi') {
+    runMultiBudget(budget, strategy as any);
+    return;
+  }
 
   if (!price) {
     $('budgetOutput')!.innerHTML = `<h3>${g.name}</h3><p class="analysis">Preco variavel. Use palpites otimizados.</p>`;
@@ -40,5 +47,29 @@ export function runBudget(): void {
     $('budgetOutput')!.innerHTML = `<h3>${g.name} | ${fmtMoney(cost)} | ${count} jogos</h3>
       <p class="analysis">${portfolioReport(g, STATE.budget)} Sobra: <strong>${fmtMoney(Math.max(0, budget - cost))}</strong>. Kelly: ${kellyCount} jogos.</p>
       ${STATE.budget.slice(0, 80).map((p, i) => renderPickRow(g, p, i)).join('')}${STATE.budget.length > 80 ? '<p class="analysis">Mostrando 80 primeiros.</p>' : ''}`;
+  }, 50);
+}
+
+function runMultiBudget(budget: number, strategy: 'ai' | 'balanced' | 'coverage' | 'contrarian'): void {
+  if (budget <= 0) {
+    $('budgetOutput')!.innerHTML = '<p class="analysis">Informe um orcamento valido.</p>';
+    return;
+  }
+  $('budgetOutput')!.innerHTML = '<p class="analysis">Otimizando portfolio multi-modalidade...</p>';
+  setTimeout(() => {
+    const prog = showProgress('budgetOutput', 'Gerando jogos em todas as modalidades');
+    const p = optimizePortfolio(budget, [], strategy);
+    applyKelly(p, 0.05);
+    prog.done();
+    $('budgetOutput')!.style.setProperty('--accent', '#5699ff');
+    const html = `<h3>Portfolio multi-modalidade | ${fmtMoney(budget)}</h3>
+      <p class="analysis">Estrategia: <strong>${strategy}</strong> com Kelly 5% edge</p>
+      ${portfolioToSummary(p)}
+      <div class="multi-detail">${p.allocations.map(a =>
+        `<details><summary>${a.game.name} (${a.ticketCount} jogos)</summary>
+         <div class="alloc-tickets">${a.tickets.slice(0, 30).map((t, i) => renderPickRow(a.game, t, i)).join('')}</div>
+         </details>`
+      ).join('')}</div>`;
+    $('budgetOutput')!.innerHTML = html;
   }, 50);
 }

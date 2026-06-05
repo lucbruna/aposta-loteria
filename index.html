@@ -100,8 +100,9 @@
       <section class="view" id="view-budget" aria-label="Orçamento">
         <div class="toolbar" role="group" aria-label="Configuração de orçamento">
           <label class="field">Modalidade<select id="budgetGame" aria-label="Selecionar modalidade"></select></label>
+          <label class="field">Modo<select id="budgetMode" aria-label="Modo de orçamento"><option value="single">Uma modalidade</option><option value="multi">Multi-modalidade (auto)</option></select></label>
           <label class="field">Orcamento R$<input id="budgetValue" type="number" min="3" max="10000" value="50" step="1" aria-label="Valor do orçamento"></label>
-          <label class="field">Estrategia<select id="budgetStrategy" aria-label="Estratégia"><option value="ai">IA Next-Gen</option><option value="coverage">Cobertura</option><option value="balanced">Balanceada</option></select></label>
+          <label class="field">Estrategia<select id="budgetStrategy" aria-label="Estratégia"><option value="ai">IA Next-Gen</option><option value="coverage">Cobertura</option><option value="balanced">Balanceada</option><option value="contrarian">Contrao</option></select></label>
           <label class="field">Simulacoes<select id="budgetSim" aria-label="Quantidade de simulações"><option value="1000">1.000</option><option value="3000" selected>3.000</option><option value="5000">5.000</option></select></label>
           <button class="btn primary" onclick="runBudget()">Montar carteira</button>
           <button class="btn" onclick="copyBudget()">Copiar</button>

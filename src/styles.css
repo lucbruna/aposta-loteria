@@ -192,3 +192,15 @@ textarea{width:100%;min-height:160px;resize:vertical;background:var(--panel-2);b
 .pwa-install .muted{font-size:12px;margin-top:2px}
 .pwa-actions{display:flex;gap:8px}
 @media (max-width:520px){.pwa-install{left:12px;right:12px;transform:none;max-width:none}.pwa-install.show{bottom:12px}}
+
+.portfolio-summary{margin:12px 0;font-size:13px}
+.alloc-header,.alloc-row{display:grid;grid-template-columns:1.5fr 1fr 1fr 1.5fr;gap:10px;padding:6px 8px;border-bottom:1px solid var(--line);align-items:center}
+.alloc-header{font-weight:600;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+.alloc-row{font-size:12px}
+.alloc-game strong{color:var(--accent);font-size:14px}
+.alloc-cost{font-family:monospace;color:var(--green)}
+.alloc-expected{color:var(--muted);font-size:11px}
+.alloc-footer{margin-top:10px;padding:8px;background:var(--panel-2);border-radius:6px;font-size:13px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.multi-detail{margin-top:10px}
+.multi-detail summary{cursor:pointer;font-weight:600;padding:6px 0;color:var(--blue)}
+.alloc-tickets{margin-top:6px}

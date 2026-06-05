@@ -239,6 +239,8 @@ export function init(): void {
   updateStatus();
   tryFetchLatest();
   autoImportCSV();
+  setupAutoPoll();
+  setupPWAInstall();
   on('log-added', () => {
     const btn = $('logBtn');
     if (btn) {
@@ -247,6 +249,66 @@ export function init(): void {
       if (cnt) cnt.textContent = String(getLogs('error').length);
     }
   });
+}
+
+let _pollTimer: number | null = null;
+function setupAutoPoll(): void {
+  const intervalMin = 30;
+  const intervalMs = intervalMin * 60 * 1000;
+  const tick = (): void => {
+    tryFetchLatest().then(() => {
+      try {
+        const last = localStorage.getItem('loterias-last-poll');
+        const now = Date.now();
+        if (!last || now - Number(last) > intervalMs) {
+          localStorage.setItem('loterias-last-poll', String(now));
+          console.log('[auto-poll] Verificou resultados');
+        }
+      } catch {}
+    }).catch(() => {});
+  };
+  if (_pollTimer) window.clearInterval(_pollTimer);
+  _pollTimer = window.setInterval(tick, intervalMs);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) tick();
+  });
+}
+
+let _deferredPrompt: any = null;
+function setupPWAInstall(): void {
+  window.addEventListener('beforeinstallprompt', (e: Event) => {
+    e.preventDefault();
+    _deferredPrompt = e;
+    showInstallBanner();
+  });
+  window.addEventListener('appinstalled', () => {
+    console.log('[PWA] App instalado');
+    hideInstallBanner();
+  });
+}
+
+function showInstallBanner(): void {
+  if ($('pwaInstallBanner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'pwaInstallBanner';
+  banner.className = 'pwa-install';
+  banner.innerHTML = `<div><strong>Instalar Loterias Brasil IA</strong><div class="muted">Acesso rapido, funciona offline</div></div><div class="pwa-actions"><button class="btn primary" id="pwaInstallBtn">Instalar</button><button class="btn" id="pwaDismissBtn">Depois</button></div>`;
+  document.body.appendChild(banner);
+  $('pwaInstallBtn')!.onclick = async () => {
+    if (!_deferredPrompt) return;
+    _deferredPrompt.prompt();
+    const choice = await _deferredPrompt.userChoice;
+    if (choice.outcome === 'accepted') console.log('[PWA] Usuario aceitou');
+    _deferredPrompt = null;
+    hideInstallBanner();
+  };
+  $('pwaDismissBtn')!.onclick = () => hideInstallBanner();
+  setTimeout(() => banner.classList.add('show'), 50);
+}
+
+function hideInstallBanner(): void {
+  const b = $('pwaInstallBanner');
+  if (b) { b.classList.remove('show'); setTimeout(() => b.remove(), 300); }
 }
 
 function renderNav(): void {

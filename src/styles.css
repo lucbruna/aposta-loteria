@@ -185,3 +185,10 @@ textarea{width:100%;min-height:160px;resize:vertical;background:var(--panel-2);b
 .cooc-cell{border:1px solid rgba(255,255,255,.04);font-size:8px;display:flex;align-items:center;justify-content:center;color:#fff}
 .cooc-pairs{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:4px;margin-top:6px}
 .cooc-pair{padding:4px 8px;background:#0a1118;border-radius:4px;font-size:11px}
+
+.pwa-install{position:fixed;left:50%;bottom:-100px;transform:translateX(-50%);z-index:998;display:flex;align-items:center;gap:16px;padding:14px 20px;background:var(--panel);border:1px solid var(--blue);border-radius:var(--radius);box-shadow:var(--shadow);transition:bottom .3s ease;max-width:520px}
+.pwa-install.show{bottom:24px}
+.pwa-install strong{font-size:14px}
+.pwa-install .muted{font-size:12px;margin-top:2px}
+.pwa-actions{display:flex;gap:8px}
+@media (max-width:520px){.pwa-install{left:12px;right:12px;transform:none;max-width:none}.pwa-install.show{bottom:12px}}
